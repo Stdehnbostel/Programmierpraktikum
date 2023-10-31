@@ -7,15 +7,25 @@ public class StartClient {
     public static void main(String args[]) {
 
         BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
+        String serverName = "";
         String input;
-        String name = "";
+        String userName = "";
         String pwd = "";
+
+        System.out.println("Verbinden zu Server: ");
+
+        try {
+            input = br.readLine();
+            serverName = input;
+        } catch (IOException e) {
+            System.out.println("Fehler bei der Eingabe");
+        }
 
         System.out.println("Nutzername: ");
 
         try {
             input = br.readLine();
-            name = input;
+            userName = input;
         } catch (IOException e) {
             System.out.println("Fehler bei der Eingabe");
         }
@@ -29,8 +39,8 @@ public class StartClient {
             System.out.println("Fehler bei der Eingabe");
         }
 
-        if (!name.equals("") && !pwd.equals("")) {
-            ComCli client = new ComCli(name, pwd, br);
+        if (!userName.equals("") && !pwd.equals("")) {
+            ComCli client = new ComCli(serverName, userName, pwd, br);
             client.run();
             System.out.println("...started Client");
         }
