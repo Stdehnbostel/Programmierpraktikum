@@ -6,11 +6,11 @@ import java.net.Socket;
 public class ComServThread extends Thread {
 
     private Thread sender;
-    Socket client;
-    Message msgout;
-    Message msgin;
+    private Socket client;
+    private Message msgout;
+    private Message msgin;
     String name;
-    String pwd;
+    private String pwd;
 
     ComServThread(Socket client, Message msg, String userName, String pwd) {
         this.client = client;
@@ -89,5 +89,9 @@ public class ComServThread extends Thread {
 
         }
 
+    }
+
+    public String getPwd() {
+        return this.pwd;
     }
 }

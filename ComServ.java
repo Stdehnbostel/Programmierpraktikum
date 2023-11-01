@@ -6,9 +6,9 @@ import java.util.*;
 public class ComServ extends Thread {
 
     private boolean runServer;
-    Message msg;
+    private Message msg;
     private Thread sender;
-    LinkedList<ComServThread> clients = new LinkedList<ComServThread>();
+    private LinkedList<ComServThread> clients = new LinkedList<ComServThread>();
 
     ComServ() {
         this.runServer = true;
@@ -16,8 +16,6 @@ public class ComServ extends Thread {
     }
 
     public void run() {
-
-        
 
         try {
 
@@ -29,21 +27,8 @@ public class ComServ extends Thread {
             while(runServer) {
 
                 Socket client = server.accept();
-                DataOutputStream out = new DataOutputStream(client.getOutputStream());
-                DataInputStream in = new DataInputStream(client.getInputStream());
-
-                System.out.println("Ask for username");
-                out.writeUTF("Nutzernamen eingeben: ");
-                String userName = in.readUTF();
-
-                out.writeUTF("Passwort eingeben: ");
-                String pwd = in.readUTF();
-
-                System.out.println("Name: " + userName + " pwd: " + pwd);
-
-                ComServThread comThread = new ComServThread(client, msg, userName, pwd);
-                clients.push(comThread);
-                comThread.start();
+                Thread newUser = new Thread(() -> receiveUserAndPwd(client));
+                newUser.start();
 
             }
             System.out.println("Nach der Schleife");
@@ -80,6 +65,31 @@ public class ComServ extends Thread {
             } catch (InterruptedException e) {
 
             }
+        }
+    }
+
+    private void receiveUserAndPwd(Socket client) {
+
+        try {
+
+            DataOutputStream out = new DataOutputStream(client.getOutputStream());
+            DataInputStream in = new DataInputStream(client.getInputStream());
+
+            System.out.println("Ask for username");
+            out.writeUTF("Nutzernamen eingeben: ");
+            String userName = in.readUTF();
+
+            out.writeUTF("Passwort eingeben: ");                
+            String pwd = in.readUTF();
+
+            System.out.println("Name: " + userName + " pwd: " + pwd);
+
+            ComServThread comThread = new ComServThread(client, msg, userName, pwd);
+            clients.push(comThread);
+            comThread.start();
+
+        } catch (IOException e) {
+
         }
     }
 }

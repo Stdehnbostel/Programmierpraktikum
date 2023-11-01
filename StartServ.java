@@ -4,7 +4,7 @@ public class StartServ extends Thread {
 
     public static void main(String args[]) {
 
-        boolean run = true;
+        // boolean run = true;
 
         BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
         System.out.println("Server starten it 'start', 'quit' zum Verlassen: ");

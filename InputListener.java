@@ -1,11 +1,10 @@
 import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
 
 public class InputListener extends Thread {
 
     public Message msg;
-    BufferedReader br;
+    private BufferedReader br;
 
     InputListener(Message msg, BufferedReader br) {
         this.msg = msg;

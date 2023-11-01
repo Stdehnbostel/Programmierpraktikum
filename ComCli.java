@@ -5,7 +5,7 @@ public class ComCli extends Thread{
 
     private String serverName;
 
-    Message msg;
+    private Message msg;
     private BufferedReader br;
     private Thread incoming;
 
