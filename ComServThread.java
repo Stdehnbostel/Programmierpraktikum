@@ -12,12 +12,12 @@ public class ComServThread extends Thread {
     String name;
     String pwd;
 
-    ComServThread(Socket client, Message msg) {
+    ComServThread(Socket client, Message msg, String userName, String pwd) {
         this.client = client;
         this.msgout = msg;
         this.msgin = new Message();
-        this.name = "";
-        this.pwd = "";
+        this.name = userName;
+        this.pwd = pwd;
     }
 
     public void run() {
@@ -26,26 +26,12 @@ public class ComServThread extends Thread {
         sender = new Thread(() -> send());
         sender.start();
 
-        while (this.name.equals("") || this.pwd.equals("")) {
-            try {
-                DataInputStream in = new DataInputStream(client.getInputStream());
-                String cliMessage = in.readUTF();
-                if (this.name.equals("")) {
-                    this.name = cliMessage;
-                } else if (this.pwd.equals("")) {
-                    this.pwd = cliMessage;
-                }
-            } catch (IOException e) {
-
-            }
-        }
-
         try {
 
             while (run) {
                 DataInputStream in = new DataInputStream(client.getInputStream());
 
-                String cliMessage = in.readUTF();
+                String cliMessage = name + " schreibt: " + in.readUTF();
                 System.out.println(cliMessage);
 
                 synchronized(this.msgout) {

@@ -30,8 +30,18 @@ public class ComServ extends Thread {
 
                 Socket client = server.accept();
                 DataOutputStream out = new DataOutputStream(client.getOutputStream());
+                DataInputStream in = new DataInputStream(client.getInputStream());
+
+                System.out.println("Ask for username");
                 out.writeUTF("Nutzernamen eingeben: ");
-                ComServThread comThread = new ComServThread(client, msg);
+                String userName = in.readUTF();
+
+                out.writeUTF("Passwort eingeben: ");
+                String pwd = in.readUTF();
+
+                System.out.println("Name: " + userName + " pwd: " + pwd);
+
+                ComServThread comThread = new ComServThread(client, msg, userName, pwd);
                 clients.push(comThread);
                 comThread.start();
 
