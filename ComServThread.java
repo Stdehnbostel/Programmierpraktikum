@@ -32,7 +32,6 @@ public class ComServThread extends Thread {
                 DataInputStream in = new DataInputStream(client.getInputStream());
 
                 String cliMessage = name + " schreibt: " + in.readUTF();
-                System.out.println(cliMessage);
 
                 synchronized(this.msgout) {
                     try {
