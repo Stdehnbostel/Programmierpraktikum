@@ -22,9 +22,9 @@ public class ClientMain {
             String userInput;
             String response;
             String clientName = "empty";
+            String password = "empty";
 
             ClientRunnable clientRun = new ClientRunnable(socket);
-
 
             new Thread(clientRun).start();
            //loop closes when user enters exit command
@@ -32,7 +32,7 @@ public class ClientMain {
            do {
                
                if (clientName.equals("empty")) {
-                    System.out.println("Enter your name ");
+                    System.out.println("Enter your name: ");
                     userInput = scanner.nextLine();
                     clientName = userInput;
                     out.writeUTF(userInput);
@@ -40,12 +40,20 @@ public class ClientMain {
                     if (userInput.equals("exit")) {
                         break;
                     }
-               } 
-               else {
-                    String message = ( "[" + clientName + "]" + ": " );
-                    //System.out.println(message);
+               } else if (password.equals("empty")) {
+                    System.out.println("Enter your password: ");
                     userInput = scanner.nextLine();
-                    out.writeUTF(userInput + "\n");
+                    password = userInput;
+                    out.writeUTF(userInput);
+                    //output.println(userInput);
+                    if (userInput.equals("exit")) {
+                        break;
+                    }
+               }
+               else {
+                    userInput = scanner.nextLine();
+                    String message = ( "[" + clientName + "]" + ": " + userInput );                    
+                    out.writeUTF(message + "\n");
                     if (userInput.equals("exit")) {
                         //reading the input from server
                         break;
@@ -61,4 +69,5 @@ public class ClientMain {
             System.out.println("Exception occured in client main: " + e.getStackTrace());
     }
     }
+
 }

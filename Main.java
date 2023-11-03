@@ -30,11 +30,11 @@ public class Main {
             DataOutputStream out = new DataOutputStream(client.getOutputStream());
             DataInputStream in = new DataInputStream(client.getInputStream());
 
+            //abfrage-Kommunikation durch ClientMain
             System.out.println("Ask for username");
-            out.writeUTF("Nutzernamen eingeben: ");
             String userName = in.readUTF();
 
-            out.writeUTF("Passwort eingeben: ");                
+            System.out.println("Ask for password");
             String pwd = in.readUTF();
 
             System.out.println("Name: " + userName + " pwd: " + pwd);
