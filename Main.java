@@ -31,10 +31,10 @@ public class Main {
             DataInputStream in = new DataInputStream(client.getInputStream());
 
             System.out.println("Ask for username");
-            out.writeUTF("Nutzernamen eingeben: ");
+            out.writeUTF("Nutzernamen eingeben: \n");
             String userName = in.readUTF();
 
-            out.writeUTF("Passwort eingeben: ");                
+            out.writeUTF("Passwort eingeben: \n");                
             String pwd = in.readUTF();
 
             System.out.println("Name: " + userName + " pwd: " + pwd);
