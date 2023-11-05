@@ -41,11 +41,25 @@ public class Main {
             System.out.println("Name: " + userName + " pwd: " + pwd);
 
             ServerThread comThread = new ServerThread(client, clients, userName, pwd);
+            sendServerMessage(clients, userName + " hat sich neu angemeldet\n");
             clients.add(comThread);
             comThread.start();
 
         } catch (IOException e) {
 
         }
+    }
+
+    private static void sendServerMessage(ArrayList<ServerThread> clients, String msg) {
+        try {
+            for(ServerThread sT: clients) {
+                DataOutputStream out = new DataOutputStream(sT.client.getOutputStream());
+                out.writeUTF(msg);
+            }
+        } catch (IOException e) {
+            System.out.println("IOExeption occurred in Main");
+        }
+        
+
     }
 }

@@ -8,7 +8,7 @@ import java.util.ArrayList;
 
 public class ServerThread extends Thread {
 
-    private Socket client;
+    public Socket client;
     private ArrayList<ServerThread> threadList;
     private PrintWriter output;
     public String userName;
