@@ -45,7 +45,7 @@ public class Main {
                     String message = ( "[" + clientName + "]" + ": " );
                     //System.out.println(message);
                     userInput = scanner.nextLine();
-                    out.writeUTF(userInput + "\n");
+                    out.writeUTF(userInput);
                     if (userInput.equals("exit")) {
                         //reading the input from server
                         break;

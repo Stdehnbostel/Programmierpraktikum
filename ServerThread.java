@@ -1,4 +1,6 @@
 import java.io.BufferedReader;
+import java.io.DataOutputStream;
+import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
@@ -37,7 +39,7 @@ public class ServerThread extends Thread {
                 if(outputString.equals("exit")) {
                     break;
                 }
-                printToALlClients(outputString);
+                printToALlClients("[" + userName + "]: " + outputString);
                 //output.println("Server says " + outputString);
                 System.out.println("Server received " + outputString);
 
@@ -50,8 +52,17 @@ public class ServerThread extends Thread {
     }
 
     private void printToALlClients(String outputString) {
+    
         for( ServerThread sT: threadList) {
-            sT.output.println(outputString);
+            String name = sT.userName;
+            try {
+                DataOutputStream out = new DataOutputStream(sT.client.getOutputStream());
+                System.out.println(outputString + "name: " + name);
+                out.writeUTF(outputString + "\n");
+            } catch (IOException e) {
+                System.out.println("IOException occured in: ServerThread");
+            }
+
         }
 
     }
