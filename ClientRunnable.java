@@ -1,18 +1,16 @@
-import java.io.BufferedReader;
+import java.io.DataInputStream;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.PrintWriter;
 import java.net.Socket;
 
 public class ClientRunnable implements Runnable {
 
     private Socket socket;
-    private BufferedReader input;
+    private DataInputStream input;
     // private PrintWriter output;
 
-    public ClientRunnable(Socket s) throws IOException {
-        this.socket = s;
-        this.input = new BufferedReader( new InputStreamReader(socket.getInputStream()));
+    public ClientRunnable(Socket client) throws IOException {
+        this.socket = client;
+        this.input = new DataInputStream(socket.getInputStream());
         // this.output = new PrintWriter(socket.getOutputStream(),true);
     }
     @Override
@@ -20,7 +18,7 @@ public class ClientRunnable implements Runnable {
         
             try {
                 while(true) {
-                    String response = input.readLine();
+                    String response = input.readUTF();
                     System.out.println(response);
                 }
             } catch (IOException e) {
