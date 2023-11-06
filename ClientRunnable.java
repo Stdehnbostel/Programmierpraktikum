@@ -11,7 +11,6 @@ public class ClientRunnable implements Runnable {
     public ClientRunnable(Socket client) throws IOException {
         this.socket = client;
         this.input = new DataInputStream(socket.getInputStream());
-        // this.output = new PrintWriter(socket.getOutputStream(),true);
     }
     @Override
     public void run() {
