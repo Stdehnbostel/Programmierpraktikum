@@ -1,7 +1,6 @@
 import java.io.BufferedReader;
 import java.io.DataOutputStream;
 import java.io.InputStreamReader;
-import java.io.PrintWriter;
 import java.net.Socket;
 import java.util.Scanner;
 
@@ -12,9 +11,7 @@ public class ClientMain {
             //reading the input from server
             BufferedReader input = new BufferedReader( new InputStreamReader(socket.getInputStream()));
             
-            //returning the output to the server : true statement is to flush the buffer otherwise
-            //we have to do it manuallyy
-            PrintWriter output = new PrintWriter(socket.getOutputStream(),true);
+            // use DataOutputStream instead of PrintWriter
             DataOutputStream out = new DataOutputStream(socket.getOutputStream());
 
             //taking the user input
@@ -36,7 +33,6 @@ public class ClientMain {
                     userInput = scanner.nextLine();
                     clientName = userInput;
                     out.writeUTF(userInput);
-                    //output.println(userInput);
                     if (userInput.equals("exit")) {
                         break;
                     }
@@ -45,7 +41,6 @@ public class ClientMain {
                     userInput = scanner.nextLine();
                     password = userInput;
                     out.writeUTF(userInput);
-                    //output.println(userInput);
                     if (userInput.equals("exit")) {
                         break;
                     }
