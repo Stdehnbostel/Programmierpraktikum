@@ -32,10 +32,10 @@ public class Main {
 
             //abfrage-Kommunikation durch ClientMain
             System.out.println("Ask for username");
-            out.writeUTF("Nutzernamen eingeben: \n");
+            out.writeUTF("Nutzernamen eingeben:");
             String userName = in.readUTF();
 
-            out.writeUTF("Passwort eingeben: \n");                
+            out.writeUTF("Passwort eingeben:");                
             String pwd = in.readUTF();
 
             System.out.println("Name: " + userName + " pwd: " + pwd);
