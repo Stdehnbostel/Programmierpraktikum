@@ -40,12 +40,30 @@ public class Main {
 
             System.out.println("Name: " + userName + " pwd: " + pwd);
 
+            StringBuilder users = new StringBuilder();
+            users.append("Auf dem Server:\n");
             ServerThread comThread = new ServerThread(client, clients, userName, pwd);
+            sendServerMessage(clients, userName + " hat sich neu angemeldet");
+            for(ServerThread sT: clients) {
+                users.append(sT.userName + "\n");
+            }
+            out.writeUTF(users.toString());
             clients.add(comThread);
             comThread.start();
 
         } catch (IOException e) {
 
+        }
+    }
+
+    private static void sendServerMessage(ArrayList<ServerThread> clients, String msg) {
+        try {
+            for(ServerThread sT: clients) {
+                DataOutputStream out = new DataOutputStream(sT.getSocket().getOutputStream());
+                out.writeUTF(msg);
+            }
+        } catch (IOException e) {
+            System.out.println("IOExeption occurred in Main");
         }
     }
 }
