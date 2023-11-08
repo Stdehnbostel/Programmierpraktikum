@@ -62,4 +62,8 @@ public class ServerThread extends Thread {
     public Socket getSocket() {
         return this.client;
     }
+
+    public String getPwd() {
+        return this.pwd;
+    }
 }
