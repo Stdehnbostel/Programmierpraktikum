@@ -31,7 +31,7 @@ public class ServerThread extends Thread {
                 if(outputString.equals("exit")) {
                     break;
                 }
-                printToALlClients(outputString);
+                printToALlClients("[" + this.userName + "]: " + outputString);
                 //output.println("Server says " + outputString);
                 System.out.println("Server received " + outputString);
 
