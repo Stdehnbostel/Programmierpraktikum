@@ -47,7 +47,8 @@ public class ClientMain {
                }
                else {
                     userInput = scanner.nextLine();                    
-                    out.writeUTF(userInput + "\n"); // Nachrichtenlayout [name]: wird jetzt auf der Serverseite implementiert
+                    out.writeUTF(userInput); 
+                    // Nachrichtenlayout [name]: wird jetzt auf der Serverseite implementiert
                     if (userInput.equals("exit")) {
                         //reading the input from server
                         break;
