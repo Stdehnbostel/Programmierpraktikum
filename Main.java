@@ -29,6 +29,7 @@ public class Main {
             DataInputStream in = new DataInputStream(client.getInputStream());
 
             //abfrage-Kommunikation durch ClientMain
+            boolean nameAvailable = true;
             System.out.println("Ask for username");
             out.writeUTF("Nutzernamen eingeben:");
             String userName = in.readUTF();
@@ -41,14 +42,22 @@ public class Main {
             StringBuilder users = new StringBuilder();
             users.append("Auf dem Server:\n");
             ServerThread comThread = new ServerThread(client, clients, userName, pwd);
-            sendServerMessage(clients, userName + " hat sich neu angemeldet");
+            
             for(ServerThread sT: clients) {
+                if(sT.userName.equals(userName) && !sT.getPwd().equals(pwd)) {
+                    nameAvailable = false;
+                }
                 users.append(sT.userName + "\n");
             }
-            out.writeUTF(users.toString());
-            clients.add(comThread);
-            comThread.start();
-
+            if(nameAvailable == false) {
+                out.writeUTF("Der Name existiert bereits.");
+                receiveUserAndPwd(client, clients);
+            } else {
+                 sendServerMessage(clients, userName + " hat sich neu angemeldet");
+                out.writeUTF(users.toString());
+                clients.add(comThread);
+                comThread.start();
+            }
         } catch (IOException e) {
 
         }
