@@ -29,7 +29,7 @@ public class ClientMain {
            do {
                
                if (clientName.equals("empty")) {
-                    System.out.println("Enter your name: ");
+                   // System.out.println("Enter your name: ");
                     userInput = scanner.nextLine();
                     clientName = userInput;
                     out.writeUTF(userInput);
@@ -37,7 +37,7 @@ public class ClientMain {
                         break;
                     }
                } else if (password.equals("empty")) {
-                    System.out.println("Enter your password: ");
+                   // System.out.println("Enter your password: ");
                     userInput = scanner.nextLine();
                     password = userInput;
                     out.writeUTF(userInput);
