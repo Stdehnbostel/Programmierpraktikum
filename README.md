@@ -1,10 +1,8 @@
 todo:
 
 server:
-*) refine functionality of username and password -> what happens if the pwd matches?
-    optional: move pwd request after thecheck whether the name is already taken
-*) optional: make the user list that is sent to the clients prettier
-*) optional: make notification of new client prettier
+*) fix login bug (User won't be able to send / receive messages after logging back into an already existing account, likely due to mismatched DataOutput/DataInput streams)
+ possible fix: store DataOutput / Input streams in ServerThread class, then overwrite the out and in variables with the already existing ones. 
 *) clean termination of ServerSocket, disconnection of clients.
 *) refactoring
 
