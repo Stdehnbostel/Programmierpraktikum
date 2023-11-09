@@ -61,6 +61,10 @@ public class Main {
                 String pwd = in.readUTF();
                 if (comThread.getPwd().equals(pwd)) {
                     // Password is correct
+                    clients.remove(comThread);
+                    comThread = new ServerThread(client, clients, userName, pwd);
+                    clients.add(comThread);
+                    comThread.start();
                     out.writeUTF("Login erfolgreich!");
                     sendServerMessage(clients, "* " + userName + " hat sich angemeldet! *");
                 } else {
