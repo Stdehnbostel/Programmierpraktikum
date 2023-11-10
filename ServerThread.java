@@ -10,12 +10,14 @@ public class ServerThread extends Thread {
     private ArrayList<ServerThread> threadList;
     public String userName;
     private String pwd;
+    private boolean online;
 
     public ServerThread(Socket socket, ArrayList<ServerThread> threads, String name, String pwd) {
         this.client = socket;
         this.threadList = threads;
         this.userName = name;
         this.pwd = pwd;
+        this.online = true;
     }
 
     @Override
@@ -29,6 +31,8 @@ public class ServerThread extends Thread {
                 String outputString = input.readUTF();
                 //if user types exit command
                 if(outputString.equals("exit")) {
+                    online = false;
+                    printToALlClients("* " + this.userName + " hat sich abgemeldet! *");
                     break;
                 }
                 printToALlClients("[" + this.userName + "]: " + outputString);
@@ -39,7 +43,9 @@ public class ServerThread extends Thread {
 
 
         } catch (Exception e) {
-            System.out.println("Error occured " +e.getStackTrace());
+            System.out.println("Error occured " + e.getStackTrace());
+            online = false;
+            printToALlClients("* " + this.userName + " hat sich abgemeldet! *");
         }
     }
 
@@ -65,5 +71,9 @@ public class ServerThread extends Thread {
 
     public String getPwd() {
         return this.pwd;
+    }
+
+    public boolean getOnlineStatus() {
+        return online;
     }
 }

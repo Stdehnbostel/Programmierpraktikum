@@ -76,14 +76,22 @@ public class Main {
                 
             }
     
-            // Provide the list of users
-            // todo: Online-Status in Client mit einbauen, und nur auf die userlist schreiben, falls der client wirklich online ist.
-            // zur Zeit werden registrierte user, welche gar nicht online sind auch mit aufgeschrieben
-            StringBuilder users = new StringBuilder("Auf dem Server:\n");
-            int userNumber = 1;
+            StringBuilder users = new StringBuilder("Auf dem Server:\nOnline:\n");
+            int userNumber = 0;
             for (ServerThread sT : clients) {
-                users.append(userNumber).append(". [").append(sT.userName).append("]\n");
-                userNumber++;
+                if (sT.getOnlineStatus()) {
+                    userNumber++;
+                    users.append(userNumber).append(". [").append(sT.userName).append("]\n");
+                }
+            }
+            if (userNumber != clients.size()) {
+                users.append("Offline:\n");
+                for (ServerThread sT : clients) {
+                    if (!sT.getOnlineStatus()) {
+                        userNumber++;
+                        users.append(userNumber).append(". [").append(sT.userName).append("]\n");
+                    }
+                }
             }
         out.writeUTF(users.toString());
         } catch (IOException e) {

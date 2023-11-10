@@ -1,5 +1,6 @@
 import java.io.BufferedReader;
 import java.io.DataOutputStream;
+import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.Socket;
 import java.util.Scanner;
@@ -7,9 +8,19 @@ import java.util.Scanner;
 public class ClientMain {
 
     public static void main(String[] args) {
-        try (Socket socket = new Socket("localhost", 1234)){
+    
+        String serverName = "";
+        try {
+            BufferedReader input = new BufferedReader( new InputStreamReader(System.in) );
+            serverName = input.readLine();
+
+        } catch (IOException e) {
+            System.out.println("IOException occured in ClientMain");
+        }
+        
+        try (Socket socket = new Socket(serverName, 1234)){
             //reading the input from server
-            BufferedReader input = new BufferedReader( new InputStreamReader(socket.getInputStream()));
+
             
             // use DataOutputStream instead of PrintWriter
             DataOutputStream out = new DataOutputStream(socket.getOutputStream());
@@ -29,7 +40,6 @@ public class ClientMain {
            do {
                
                if (clientName.equals("empty")) {
-                   // System.out.println("Enter your name: ");
                     userInput = scanner.nextLine();
                     clientName = userInput;
                     out.writeUTF(userInput);
@@ -37,7 +47,6 @@ public class ClientMain {
                         break;
                     }
                } else if (password.equals("empty")) {
-                   // System.out.println("Enter your password: ");
                     userInput = scanner.nextLine();
                     password = userInput;
                     out.writeUTF(userInput);
@@ -57,7 +66,7 @@ public class ClientMain {
 
            } while (!userInput.equals("exit"));
            
-
+           out.writeUTF(userInput);
 
             
         } catch (Exception e) {
