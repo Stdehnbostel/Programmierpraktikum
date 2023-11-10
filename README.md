@@ -5,7 +5,6 @@ server:
 *) refactoring
 
 client:
-*) enable to choose a server
 *) refactoring
 
 *) make it possible to send pdf and image files
