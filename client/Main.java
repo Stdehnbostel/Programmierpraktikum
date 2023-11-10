@@ -5,7 +5,7 @@ import java.io.InputStreamReader;
 import java.net.Socket;
 import java.util.Scanner;
 
-public class ClientMain {
+public class Main {
 
     public static void main(String[] args) {
     
@@ -65,9 +65,6 @@ public class ClientMain {
                 }
 
            } while (!userInput.equals("exit"));
-           
-           out.writeUTF(userInput);
-
             
         } catch (Exception e) {
             System.out.println("Exception occured in client main: " + e.getStackTrace());
