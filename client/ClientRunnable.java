@@ -6,7 +6,6 @@ public class ClientRunnable implements Runnable {
 
     private Socket socket;
     private DataInputStream input;
-    // private PrintWriter output;
 
     public ClientRunnable(Socket client) throws IOException {
         this.socket = client;
@@ -18,6 +17,9 @@ public class ClientRunnable implements Runnable {
             try {
                 while(true) {
                     String response = input.readUTF();
+                    if (response.equals("exit")) {
+                        socket.close();
+                    }
                     System.out.println(response);
                 }
             } catch (IOException e) {

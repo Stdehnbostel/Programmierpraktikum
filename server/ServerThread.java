@@ -52,7 +52,6 @@ public class ServerThread extends Thread {
     private void printToALlClients(String outputString) {
     
         for( ServerThread sT: threadList) {
-            String name = sT.userName;
             try {
                 DataOutputStream out = new DataOutputStream(sT.client.getOutputStream());
                 System.out.println(outputString);

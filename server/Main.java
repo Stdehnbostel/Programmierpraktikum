@@ -7,6 +7,8 @@ public class Main {
     public static void main(String args[]) {
 
         ArrayList<ServerThread> clients = new ArrayList<ServerThread>();
+        ServerMessages msg = new ServerMessages(clients);
+        msg.start();
         String input = "";
         try (ServerSocket server = new ServerSocket(1234)){
             
