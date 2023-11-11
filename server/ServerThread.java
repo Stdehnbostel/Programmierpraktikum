@@ -59,9 +59,7 @@ public class ServerThread extends Thread {
             } catch (IOException e) {
                 System.out.println("IOException occured in: ServerThread");
             }
-
         }
-
     }
 
     public Socket getSocket() {

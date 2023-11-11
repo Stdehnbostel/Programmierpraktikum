@@ -2,24 +2,31 @@ import java.io.BufferedReader;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.net.ServerSocket;
 import java.util.ArrayList;
 
 public class ServerMessages extends Thread {
 
-    private String msg;
+    public String msg;
     private ArrayList<ServerThread> clients;
+    private ServerSocket server;
 
-    ServerMessages(ArrayList<ServerThread> clients) {
+    ServerMessages(ArrayList<ServerThread> clients, ServerSocket server) {
+        this.msg = "";
         this.clients = clients;
+        this.server = server;
     }
 
     public void run() {
 
-        while (true) {
+        while (!this.msg.equals("exit")) {
             try {
                 BufferedReader input = new BufferedReader(new InputStreamReader(System.in));
                 this.msg = input.readLine();    
-                sendServerMessage(clients, msg);            
+                sendServerMessage(clients, msg);
+                if (this.msg.equals("exit")) {
+                    server.close();
+                }            
             } catch (IOException e) {
                 System.out.println("Error read line");
             }

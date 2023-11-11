@@ -28,11 +28,11 @@ public class Main {
             //taking the user input
             Scanner scanner = new Scanner(System.in);
             String userInput;
-            String response;
+            // String response;
             String clientName = "empty";
             String password = "empty";
 
-            ClientRunnable clientRun = new ClientRunnable(socket);
+            ClientRunnable clientRun = new ClientRunnable(socket, scanner);
 
             new Thread(clientRun).start();
            //loop closes when user enters exit command
@@ -59,16 +59,19 @@ public class Main {
                     out.writeUTF(userInput); 
                     // Nachrichtenlayout [name]: wird jetzt auf der Serverseite implementiert
                     if (userInput.equals("exit")) {
+                        clientRun.clientRun = false;
                         //reading the input from server
                         break;
                     }
                 }
 
-           } while (!userInput.equals("exit"));
+           } while (clientRun.clientRun);
+
+           scanner.close();
             
         } catch (Exception e) {
             System.out.println("Exception occured in client main: " + e.getStackTrace());
-    }
+        }
     }
 
 }

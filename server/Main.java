@@ -6,13 +6,18 @@ public class Main {
 
     public static void main(String args[]) {
 
+        boolean run = true;
         ArrayList<ServerThread> clients = new ArrayList<ServerThread>();
-        ServerMessages msg = new ServerMessages(clients);
-        msg.start();
-        String input = "";
+        
+
         try (ServerSocket server = new ServerSocket(1234)){
-            
-            while(!input.equals("exit")) {
+            ServerMessages msg = new ServerMessages(clients, server);
+            msg.start();
+            while(run) {
+                if (msg.msg.equals("exit")) {
+                    run = false;
+                    break;
+                }
                 Socket client = server.accept();
                 Thread newUser = new Thread(() -> receiveUserAndPwd(client, clients));
                 newUser.start();
