@@ -33,7 +33,7 @@ public class ServerMessages extends Thread {
         }
     }
 
-    private void sendServerMessage(ArrayList<ServerThread> clients, String msg) {
+    public void sendServerMessage(ArrayList<ServerThread> clients, String msg) {
         try {
             for(ServerThread sT: clients) {
                 DataOutputStream out = new DataOutputStream(sT.getSocket().getOutputStream());

@@ -19,7 +19,7 @@ public class Main {
                     break;
                 }
                 Socket client = server.accept();
-                Thread newUser = new Thread(() -> receiveUserAndPwd(client, clients));
+                Thread newUser = new Thread(() -> receiveUserAndPwd(msg, client, clients));
                 newUser.start();
                 
             }
@@ -28,7 +28,7 @@ public class Main {
         }
     }
 
-    private static void receiveUserAndPwd(Socket client, ArrayList<ServerThread> clients) {
+    private static void receiveUserAndPwd(ServerMessages msg, Socket client, ArrayList<ServerThread> clients) {
         try {
             DataOutputStream out = new DataOutputStream(client.getOutputStream());
             DataInputStream in = new DataInputStream(client.getInputStream());
@@ -61,7 +61,7 @@ public class Main {
                 comThread = new ServerThread(client, clients, userName, pwd);
                 clients.add(comThread);
                 comThread.start();
-                sendServerMessage(clients, "* " + userName + " hat sich registriert! *");
+                msg.sendServerMessage(clients, "* " + userName + " hat sich registriert! *");
             } else {
                 // If the username is already in use, prompt the client for authentication
                 out.writeUTF("Log dich mit deinem Passwort ein:");
@@ -73,7 +73,7 @@ public class Main {
                     clients.add(comThread);
                     comThread.start();
                     out.writeUTF("Login erfolgreich!");
-                    sendServerMessage(clients, "* " + userName + " hat sich angemeldet! *");
+                    msg.sendServerMessage(clients, "* " + userName + " hat sich angemeldet! *");
                 } else {
                     // Password is incorrect
                     out.writeUTF("Falsches Passwort! Verbindung wird beendet.");
@@ -102,18 +102,6 @@ public class Main {
             }
         out.writeUTF(users.toString());
         } catch (IOException e) {
-        }
-    }
-    
-
-    private static void sendServerMessage(ArrayList<ServerThread> clients, String msg) {
-        try {
-            for(ServerThread sT: clients) {
-                DataOutputStream out = new DataOutputStream(sT.getSocket().getOutputStream());
-                out.writeUTF(msg);
-            }
-        } catch (IOException e) {
-            System.out.println("IOExeption occurred in Main");
         }
     }
 }
