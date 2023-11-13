@@ -1,6 +1,4 @@
 import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.IOException;
 import java.net.Socket;
 import java.util.ArrayList;
 
@@ -22,6 +20,7 @@ public class ServerThread extends Thread {
 
     @Override
     public void run() {
+        ServerMessages msg = new ServerMessages(threadList, null);
         try {
             //Reading the input from Client
             DataInputStream input = new DataInputStream(client.getInputStream());
@@ -32,10 +31,10 @@ public class ServerThread extends Thread {
                 //if user types exit command
                 if(outputString.equals("exit")) {
                     online = false;
-                    printToALlClients("* " + this.userName + " hat sich abgemeldet! *");
+                    msg.sendServerMessage(threadList, "* " + this.userName + " hat sich abgemeldet! *");
                     break;
                 }
-                printToALlClients("[" + this.userName + "]: " + outputString);
+                msg.sendServerMessage(threadList, "[" + this.userName + "]: " + outputString);
                 //output.println("Server says " + outputString);
                 System.out.println("Server received " + outputString);
 
@@ -45,24 +44,8 @@ public class ServerThread extends Thread {
         } catch (Exception e) {
             System.out.println("Error occured " + e.getStackTrace());
             online = false;
-            printToALlClients("* " + this.userName + " hat sich abgemeldet! *");
+            msg.sendServerMessage(threadList, "* " + this.userName + " hat sich abgemeldet! *");
         }
-    }
-
-    private void printToALlClients(String outputString) {
-    
-        for( ServerThread sT: threadList) {
-            String name = sT.userName;
-            try {
-                DataOutputStream out = new DataOutputStream(sT.client.getOutputStream());
-                System.out.println(outputString);
-                out.writeUTF(outputString);
-            } catch (IOException e) {
-                System.out.println("IOException occured in: ServerThread");
-            }
-
-        }
-
     }
 
     public Socket getSocket() {
