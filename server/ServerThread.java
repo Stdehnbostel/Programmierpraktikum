@@ -37,7 +37,6 @@ public class ServerThread extends Thread {
                 msg.sendServerMessage(threadList, "[" + this.userName + "]: " + outputString);
                 //output.println("Server says " + outputString);
                 System.out.println("Server received " + outputString);
-
             }
 
 

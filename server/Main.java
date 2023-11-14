@@ -83,24 +83,9 @@ public class Main {
                 
             }
     
-            StringBuilder users = new StringBuilder("Auf dem Server:\nOnline:\n");
-            int userNumber = 0;
-            for (ServerThread sT : clients) {
-                if (sT.getOnlineStatus()) {
-                    userNumber++;
-                    users.append(userNumber).append(". [").append(sT.userName).append("]\n");
-                }
-            }
-            if (userNumber != clients.size()) {
-                users.append("Offline:\n");
-                for (ServerThread sT : clients) {
-                    if (!sT.getOnlineStatus()) {
-                        userNumber++;
-                        users.append(userNumber).append(". [").append(sT.userName).append("]\n");
-                    }
-                }
-            }
-        out.writeUTF(users.toString());
+            String users = msg.generateUserList(clients);
+            out.writeUTF(users);
+
         } catch (IOException e) {
         }
     }
