@@ -4,7 +4,7 @@ import java.io.IOException;
 import java.net.Socket;
 import java.util.Scanner;
 
-public class ClientRunnable implements Runnable {
+public class ClientRunnable extends Thread {
 
     private Socket socket;
     private DataInputStream input;
@@ -22,17 +22,22 @@ public class ClientRunnable implements Runnable {
         
             try {
                 while(clientRun) {
-                    String response = input.readUTF();
-                    if (response.equals("exit")) {
-                        DataOutputStream out = new DataOutputStream(socket.getOutputStream());
-                        clientRun = false;
-                        out.writeUTF(response);
-                        scanner.close();
-                        socket.close();
+                    if (!socket.isClosed() && input.available() != 0) {
+                            String response = input.readUTF();
+                        if (response.equals("exit")) {
+                            DataOutputStream out = new DataOutputStream(socket.getOutputStream());
+                            clientRun = false;
+                            out.writeUTF(response);
+                            scanner.close();
+                            socket.close();
+                        }
+                        System.out.println(response);
                     }
-                    System.out.println(response);
+                    sleep(50);
                 }
             } catch (IOException e) {
+                e.printStackTrace();
+            } catch (InterruptedException e) {
                 e.printStackTrace();
             } finally {
                 try {

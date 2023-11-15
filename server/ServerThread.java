@@ -31,10 +31,10 @@ public class ServerThread extends Thread {
                 //if user types exit command
                 if(outputString.equals("exit")) {
                     online = false;
-                    msg.sendServerMessage(threadList, "* " + this.userName + " hat sich abgemeldet! *");
+                    msg.sendToAllClients("* " + this.userName + " hat sich abgemeldet! *");
                     break;
                 }
-                msg.sendServerMessage(threadList, "[" + this.userName + "]: " + outputString);
+                msg.sendToAllClients("[" + this.userName + "]: " + outputString);
                 //output.println("Server says " + outputString);
                 System.out.println("Server received " + outputString);
             }
@@ -43,7 +43,7 @@ public class ServerThread extends Thread {
         } catch (Exception e) {
             System.out.println("Error occured " + e.getStackTrace());
             online = false;
-            msg.sendServerMessage(threadList, "* " + this.userName + " hat sich abgemeldet! *");
+            msg.sendToAllClients("* " + this.userName + " hat sich abgemeldet! *");
         }
     }
 

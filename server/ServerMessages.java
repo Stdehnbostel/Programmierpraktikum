@@ -23,7 +23,7 @@ public class ServerMessages extends Thread {
             try {
                 BufferedReader input = new BufferedReader(new InputStreamReader(System.in));
                 this.msg = input.readLine();    
-                sendServerMessage(clients, msg);
+                sendToAllClients(msg);
                 if (this.msg.equals("exit")) {
                     server.close();
                 }            
@@ -33,14 +33,19 @@ public class ServerMessages extends Thread {
         }
     }
 
-    public void sendServerMessage(ArrayList<ServerThread> clients, String msg) {
+    public void sendToClient(ServerThread client, String msg) {
         try {
-            for(ServerThread sT: clients) {
-                DataOutputStream out = new DataOutputStream(sT.getSocket().getOutputStream());
-                out.writeUTF(msg);
-            }
+            DataOutputStream out = new DataOutputStream(client.getSocket().getOutputStream());
+            out.writeUTF(msg);
         } catch (IOException e) {
-            System.out.println("IOExeption occurred in Main");
+            System.out.println("Exception occured in ServerMessages: " + e);
+        }
+    }
+
+    public void sendToAllClients(String msg) {
+
+        for(ServerThread sT: clients) {
+            sendToClient(sT, msg);
         }
     }
 

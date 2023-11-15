@@ -10,6 +10,7 @@ public class Main {
     public static void main(String[] args) {
     
         String serverName = "";
+        System.out.println("Verbinde zu Server: ");
         try {
             BufferedReader input = new BufferedReader( new InputStreamReader(System.in) );
             serverName = input.readLine();
@@ -29,8 +30,6 @@ public class Main {
             Scanner scanner = new Scanner(System.in);
             String userInput;
             // String response;
-            String clientName = "empty";
-            String password = "empty";
 
             ClientRunnable clientRun = new ClientRunnable(socket, scanner);
 
@@ -39,30 +38,14 @@ public class Main {
            
            do {
                
-               if (clientName.equals("empty")) {
-                    userInput = scanner.nextLine();
-                    clientName = userInput;
-                    out.writeUTF(userInput);
-                    if (userInput.equals("exit")) {
-                        break;
-                    }
-               } else if (password.equals("empty")) {
-                    userInput = scanner.nextLine();
-                    password = userInput;
-                    out.writeUTF(userInput);
-                    if (userInput.equals("exit")) {
-                        break;
-                    }
-               }
-               else {
-                    userInput = scanner.nextLine();                    
-                    out.writeUTF(userInput); 
+                userInput = scanner.nextLine();                    
+                out.writeUTF(userInput); 
                     // Nachrichtenlayout [name]: wird jetzt auf der Serverseite implementiert
-                    if (userInput.equals("exit")) {
-                        clientRun.clientRun = false;
-                        //reading the input from server
-                        break;
-                    }
+                if (userInput.equals("exit")) {
+                    clientRun.clientRun = false;
+                    out.flush();
+                    //reading the input from server                        
+                    // break;
                 }
 
            } while (clientRun.clientRun);
@@ -71,7 +54,7 @@ public class Main {
             
         } catch (Exception e) {
             System.out.println("Exception occured in client main: " + e.getStackTrace());
-        }
+        } 
     }
 
 }
