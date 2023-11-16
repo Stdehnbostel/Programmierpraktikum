@@ -17,13 +17,15 @@ public class ClientRunnable extends Thread {
         this.clientRun = true;
         this.scanner = scanner;
     }
+    
     @Override
     public void run() {
         
             try {
-                while(clientRun) {
-                    if (!socket.isClosed() && input.available() != 0) {
+                while(!socket.isClosed()) {
+                    if (input.available() != 0) {
                             String response = input.readUTF();
+                            System.out.println(response);
                         if (response.equals("exit")) {
                             DataOutputStream out = new DataOutputStream(socket.getOutputStream());
                             clientRun = false;
@@ -31,7 +33,6 @@ public class ClientRunnable extends Thread {
                             scanner.close();
                             socket.close();
                         }
-                        System.out.println(response);
                     }
                     sleep(50);
                 }

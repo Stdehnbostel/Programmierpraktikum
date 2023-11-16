@@ -26,7 +26,7 @@ public class LoginHandler extends Thread {
             DataInputStream in = new DataInputStream(client.getInputStream());
     
             // Prompt the client for the username
-            msg.sendToClient(client, "Nutzernamen eingeben:");
+            out.writeUTF("Nutzernamen eingeben:");
             String userName = in.readUTF();
     
             ServerThread comThread = searchUser(clients, userName);
