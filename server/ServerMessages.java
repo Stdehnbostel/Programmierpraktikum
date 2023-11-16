@@ -40,7 +40,7 @@ public class ServerMessages extends Thread {
                 out.writeUTF(msg);
             }
         } catch (IOException e) {
-            System.out.println("IOExeption occurred in Main");
+            System.out.println("IOExeption occurred in sendServerMessage()");
         }
     }
 
