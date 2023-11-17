@@ -28,7 +28,7 @@ public class ServerMessages extends Thread {
                     server.close();
                 }            
             } catch (IOException e) {
-                System.out.println("Error read line");
+                System.out.println("IOExeption occurred in sendServerMessage()");
             }
         }
     }
@@ -38,7 +38,7 @@ public class ServerMessages extends Thread {
             DataOutputStream out = new DataOutputStream(client.getSocket().getOutputStream());
             out.writeUTF(msg);
         } catch (IOException e) {
-            System.out.println("Exception occured in ServerMessages: " + e);
+            System.out.println("IOExeption occurred in sendServerMessage()");
         }
     }
 
