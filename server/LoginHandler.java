@@ -11,7 +11,7 @@ public class LoginHandler extends Thread {
 
     public LoginHandler(Socket client, ArrayList<ServerThread> clients) {
         this.client = client;
-        this. clients = clients;
+        this.clients = clients;
     }
 
     public void run() {
