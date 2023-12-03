@@ -48,7 +48,10 @@ public class ChatClientUI extends JFrame {
 
         JPanel chatPanel = new JPanel(new BorderLayout());
         chatPanel.add(new JLabel("Chat"), BorderLayout.NORTH);
-        chatPanel.add(new JScrollPane().add(chatArea), BorderLayout.CENTER);
+        JScrollPane scrollChat = new JScrollPane();
+        scrollChat.setViewportView(chatArea);
+        scrollChat.setVerticalScrollBar(scrollChat.createVerticalScrollBar());
+        chatPanel.add(scrollChat, BorderLayout.CENTER);
         chatPanel.add(inputField, BorderLayout.SOUTH);
 
         JPanel userListPanel = new JPanel(new BorderLayout());
