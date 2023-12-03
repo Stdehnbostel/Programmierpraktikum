@@ -2,12 +2,17 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.IOException;
 
 public class ChatClientUI extends JFrame {
     private JTextArea chatArea;
     private JTextField inputField;
+    private Main socketConnection;
+    private String chat;
 
     public ChatClientUI() {
+        this.chat = "";
+        this.socketConnection = new Main("localhost");
         setTitle("Chat Client");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setSize(500, 400);
@@ -21,13 +26,18 @@ public class ChatClientUI extends JFrame {
 
     private void initComponents() {
         chatArea = new JTextArea();
+        
         chatArea.setEditable(false);
+        chatArea.setText(chat);
+        socketConnection.setChat(chatArea);
+        chatArea.setVisible(true);
 
         inputField = new JTextField();
         inputField.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 //tba
+                socketConnection.send(inputField.getText());
             }
         });
 
@@ -38,7 +48,7 @@ public class ChatClientUI extends JFrame {
 
         JPanel chatPanel = new JPanel(new BorderLayout());
         chatPanel.add(new JLabel("Chat"), BorderLayout.NORTH);
-        chatPanel.add(new JScrollPane(), BorderLayout.CENTER);
+        chatPanel.add(new JScrollPane().add(chatArea), BorderLayout.CENTER);
         chatPanel.add(inputField, BorderLayout.SOUTH);
 
         JPanel userListPanel = new JPanel(new BorderLayout());
@@ -79,6 +89,10 @@ public class ChatClientUI extends JFrame {
             @Override
             public void actionPerformed(ActionEvent e) {
                 //tba
+                socketConnection.setUserName(usernameField.getText());
+                socketConnection.setPwd(new String(passwordField.getPassword()));
+                socketConnection.start();
+                loginFrame.dispose();
             }
         });
 
