@@ -1,11 +1,7 @@
-import java.io.BufferedReader;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.net.Socket;
-import java.util.Scanner;
-
 import javax.swing.JTextArea;
 
 public class Main extends Thread {
@@ -24,10 +20,7 @@ public class Main extends Thread {
         
         try {
             this.socket = new Socket(serverName, 1234);
-            //reading the input from server
 
-            
-            // use DataOutputStream instead of PrintWriter
             DataInputStream input = new DataInputStream(socket.getInputStream());
             DataOutputStream out = new DataOutputStream(socket.getOutputStream());
 
@@ -37,7 +30,8 @@ public class Main extends Thread {
             }
 
             String requestPwd = input.readUTF();
-            if(requestPwd.equals("Log dich mit deinem Passwort ein:")) {
+            if(requestPwd.equals("Log dich mit deinem Passwort ein:") ||
+                requestPwd.equals("Registriere dich mit deinem Passwort:")) {
                 out.writeUTF(this.pwd);
             }
            
@@ -48,14 +42,11 @@ public class Main extends Thread {
                     System.out.println(response);
                 if (response.equals("exit")) {
                     out.writeUTF(response);
-                    // scanner.close();
                     socket.close();
                 }
             }
             sleep(50);
         }
-
-           // scanner.close();
             
         } catch (Exception e) {
             System.out.println("Exception occured in client main: " + e.getStackTrace());
