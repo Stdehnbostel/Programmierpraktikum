@@ -3,15 +3,18 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Socket;
 import java.util.ArrayList;
+import javax.swing.JTextArea;
 
 public class LoginHandler extends Thread {
 
     private Socket client;
     private ArrayList<ServerThread> clients;
+    private JTextArea chat;
 
-    public LoginHandler(Socket client, ArrayList<ServerThread> clients) {
+    public LoginHandler(Socket client, ArrayList<ServerThread> clients, JTextArea chat) {
         this.client = client;
         this.clients = clients;
+        this.chat = chat;
     }
 
     public void run() {
@@ -28,7 +31,7 @@ public class LoginHandler extends Thread {
             // Prompt the client for the username
             out.writeUTF("Nutzernamen eingeben:");
             String userName = in.readUTF();
-    
+            String newUser = "";
             ServerThread comThread = searchUser(clients, userName);
 
             boolean nameAvailable = isAvailable(comThread);
@@ -37,10 +40,12 @@ public class LoginHandler extends Thread {
                 // If the username is not in use, prompt the client to register 
                 out.writeUTF("Registriere dich mit deinem Passwort:");
                 String pwd = in.readUTF();
-                comThread = new ServerThread(client, clients, userName, pwd);
+                comThread = new ServerThread(client, clients, userName, pwd, chat);
                 clients.add(comThread);
                 comThread.start();
-                msg.sendToAllClients("* " + userName + " hat sich registriert! *");
+                newUser = "* " + userName + " hat sich registriert! *";
+                chat.append(newUser + "\n");
+                msg.sendToAllClients(newUser);
             } else {
                 // If the username is already in use, prompt the client for authentication
                 out.writeUTF("Log dich mit deinem Passwort ein:");
@@ -48,15 +53,16 @@ public class LoginHandler extends Thread {
                 if (comThread.getPwd().equals(pwd)) {
                     // Password is correct
                     clients.remove(comThread);
-                    comThread = new ServerThread(client, clients, userName, pwd);
+                    comThread = new ServerThread(client, clients, userName, pwd, chat);
                     clients.add(comThread);
                     comThread.start();
                     out.writeUTF("Login erfolgreich!");
-                    msg.sendToAllClients("* " + userName + " hat sich angemeldet! *");
+                    newUser = "* " + userName + " hat sich angemeldet! *";
+                    chat.append(newUser + "\n");
+                    msg.sendToAllClients(newUser);
                 } else {
                     // Password is incorrect
                     out.writeUTF("Falsches Passwort! Verbindung wird beendet.");
-                    // clients.remove(comThread) | dachte zuerst das würde Sinn ergeben, löscht aber natürlich den ganzen User, also müsste sich der Client neu registrieren;
                     client.close();
                 }
                 

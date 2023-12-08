@@ -4,33 +4,40 @@ import java.io.IOException;
 import java.net.Socket;
 import java.util.Scanner;
 
+import javax.swing.JPanel;
+import javax.swing.JTextArea;
+
 public class ClientRunnable extends Thread {
 
     private Socket socket;
     private DataInputStream input;
     public boolean clientRun;
-    private Scanner scanner;
+    private JTextArea chat;
+    // private Scanner scanner;
 
-    public ClientRunnable(Socket client, Scanner scanner) throws IOException {
-        this.socket = client;
-        this.input = new DataInputStream(socket.getInputStream());
+    public ClientRunnable(Socket socket, JTextArea chat) {        
         this.clientRun = true;
-        this.scanner = scanner;
+        // this.scanner = scanner;
+        this.socket = socket;
+        this.chat = chat;
     }
     
     @Override
     public void run() {
+
         
             try {
+                this.input = new DataInputStream(socket.getInputStream());
                 while(!socket.isClosed()) {
                     if (input.available() != 0) {
                             String response = input.readUTF();
+                            chat.setText(chat.getText() + response + "\n");
                             System.out.println(response);
                         if (response.equals("exit")) {
                             DataOutputStream out = new DataOutputStream(socket.getOutputStream());
                             clientRun = false;
                             out.writeUTF(response);
-                            scanner.close();
+                            // scanner.close();
                             socket.close();
                         }
                     }
@@ -48,5 +55,4 @@ public class ClientRunnable extends Thread {
                 }
             }
     }
-    
 }

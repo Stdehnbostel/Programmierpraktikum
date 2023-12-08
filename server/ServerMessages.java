@@ -34,11 +34,13 @@ public class ServerMessages extends Thread {
     }
 
     public void sendToClient(ServerThread client, String msg) {
-        try {
-            DataOutputStream out = new DataOutputStream(client.getSocket().getOutputStream());
-            out.writeUTF(msg);
-        } catch (IOException e) {
-            System.out.println("IOExeption occurred in sendServerMessage()");
+        if(client.getOnlineStatus() == true) {
+            try {
+                DataOutputStream out = new DataOutputStream(client.getSocket().getOutputStream());
+                out.writeUTF(msg);
+            } catch (IOException e) {
+                System.out.println("IOExeption occurred in sendServerMessage()");
+            }
         }
     }
 
