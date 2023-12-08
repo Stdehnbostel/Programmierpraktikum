@@ -5,6 +5,8 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
 import java.util.ArrayList;
+import java.util.LinkedList;
+
 import javax.swing.JTextArea;
 
 public class LoginHandler extends Thread {
@@ -60,6 +62,12 @@ public class LoginHandler extends Thread {
                 comThread.start();
                 newUser = "* " + userName + " hat sich registriert! *";
                 chat.append(newUser + "\n");
+                String userList = msg.generateUserList(clients);
+                UserList users = new UserList(userList);
+                System.out.println("send User List: \n");
+                System.out.println(users);
+                msg.sendToAllClients(users);
+                out.flush();
                 msg.sendToAllClients(newUser);
             } else {
                 // If the username is already in use, prompt the client for authentication
@@ -80,6 +88,12 @@ public class LoginHandler extends Thread {
                     out.writeObject("Login erfolgreich!");
                     out.flush();
                     newUser = "* " + userName + " hat sich angemeldet! *";
+                    String userList = msg.generateUserList(clients);
+                    UserList users = new UserList(userList);
+                    System.out.println("send User List: \n");
+                    System.out.println(users);
+                    out.writeObject(users);
+                    out.flush();
                     chat.append(newUser + "\n");
                     msg.sendToAllClients(newUser);
                 } else {
@@ -91,7 +105,8 @@ public class LoginHandler extends Thread {
                 
             }
     
-            String users = msg.generateUserList(clients);
+            String userList = msg.generateUserList(clients);
+            UserList users = new UserList(userList);
             System.out.println("send User List: \n");
             System.out.println(users);
             out.writeObject(users);

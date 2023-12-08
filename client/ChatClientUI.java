@@ -5,6 +5,7 @@ import java.awt.event.ActionListener;
 
 public class ChatClientUI extends JFrame {
     private JTextArea chatArea;
+    private JTextArea userList;
     private JTextField inputField;
     private Main socketConnection;
     private String chat;
@@ -31,6 +32,12 @@ public class ChatClientUI extends JFrame {
         socketConnection.setChat(chatArea);
         chatArea.setVisible(true);
 
+        userList = new JTextArea();
+        userList.setEditable(false);
+        userList.setVisible(true);
+        userList.setBackground(getForeground());
+        socketConnection.setUserList(userList);
+
         inputField = new JTextField();
         inputField.addActionListener(new ActionListener() {
             @Override
@@ -55,7 +62,10 @@ public class ChatClientUI extends JFrame {
 
         JPanel userListPanel = new JPanel(new BorderLayout());
         userListPanel.add(new JLabel("User List"), BorderLayout.NORTH);
-        userListPanel.add(new JScrollPane(), BorderLayout.CENTER);
+        JScrollPane scrollUsers = new JScrollPane();
+        scrollUsers.setViewportView(userList);
+        scrollUsers.setVerticalScrollBar(scrollUsers.createVerticalScrollBar());
+        userListPanel.add(scrollUsers, BorderLayout.CENTER);
 
         JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, chatPanel, userListPanel);
         splitPane.setResizeWeight(0.7);

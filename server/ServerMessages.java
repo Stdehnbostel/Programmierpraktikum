@@ -34,7 +34,7 @@ public class ServerMessages extends Thread {
         }
     }
 
-    public void sendToClient(ServerThread client, String msg) {
+    public void sendToClient(ServerThread client, Object msg) {
         if(client.getOnlineStatus() == true) {
             try {
                 ObjectOutputStream out = client.getObjectOutputStream();
@@ -46,7 +46,7 @@ public class ServerMessages extends Thread {
         }
     }
 
-    public void sendToAllClients(String msg) {
+    public void sendToAllClients(Object msg) {
 
         for(ServerThread sT: clients) {
             sendToClient(sT, msg);
@@ -55,7 +55,7 @@ public class ServerMessages extends Thread {
 
     public String generateUserList(ArrayList<ServerThread> clients) {
     
-        StringBuilder users = new StringBuilder("Auf dem Server:\nOnline:\n");
+        StringBuilder users = new StringBuilder("Online:\n");
         int userNumber = 0;
         for (ServerThread sT : clients) {
             if (sT.getOnlineStatus()) {

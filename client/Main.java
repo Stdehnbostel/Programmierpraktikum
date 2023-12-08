@@ -4,6 +4,8 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
+import java.util.LinkedList;
+
 import javax.swing.JTextArea;
 
 public class Main extends Thread {
@@ -13,6 +15,7 @@ public class Main extends Thread {
     private String pwd;
     private Socket socket;
     private JTextArea chat;
+    private JTextArea userList;
     private ObjectOutputStream out;
 
     public Main(String serverName) {
@@ -69,7 +72,10 @@ public class Main extends Thread {
                 socket.close();
                 }
             }
-            sleep(50);
+            if (msg instanceof UserList) {
+                String response = msg.toString();
+                userList.setText(response);
+            }
         }
             
         } catch (IOException ie) {
@@ -99,5 +105,9 @@ public class Main extends Thread {
 
     public void setChat(JTextArea chat) {
         this.chat = chat;
+    }
+
+    public void setUserList(JTextArea userList) {
+        this.userList = userList;
     }
 }
