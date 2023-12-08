@@ -2,6 +2,7 @@ import java.io.BufferedReader;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.ObjectOutputStream;
 import java.net.ServerSocket;
 import java.util.ArrayList;
 
@@ -36,8 +37,9 @@ public class ServerMessages extends Thread {
     public void sendToClient(ServerThread client, String msg) {
         if(client.getOnlineStatus() == true) {
             try {
-                DataOutputStream out = new DataOutputStream(client.getSocket().getOutputStream());
-                out.writeUTF(msg);
+                ObjectOutputStream out = client.getObjectOutputStream();
+                out.writeObject(msg);
+                out.flush();
             } catch (IOException e) {
                 System.out.println("IOExeption occurred in sendServerMessage()");
             }

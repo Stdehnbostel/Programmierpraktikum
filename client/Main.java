@@ -1,6 +1,8 @@
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.net.Socket;
 import javax.swing.JTextArea;
 
@@ -11,6 +13,7 @@ public class Main extends Thread {
     private String pwd;
     private Socket socket;
     private JTextArea chat;
+    private ObjectOutputStream out;
 
     public Main(String serverName) {
         this.serverName = serverName;
@@ -21,42 +24,66 @@ public class Main extends Thread {
         try {
             this.socket = new Socket(serverName, 1234);
 
-            DataInputStream input = new DataInputStream(socket.getInputStream());
-            DataOutputStream out = new DataOutputStream(socket.getOutputStream());
+            ObjectInputStream input = new ObjectInputStream(socket.getInputStream());
+            this.out = new ObjectOutputStream(socket.getOutputStream());
 
-            String requestUsername = input.readUTF();
+            Object msg;
+
+            msg = input.readObject();
+            
+            String requestUsername = "";
+
+            if (msg instanceof String) {
+                requestUsername = msg.toString();
+            }
+                
             if(requestUsername.equals("Nutzernamen eingeben:")) {
-                out.writeUTF(this.userName);
+                out.writeObject(this.userName);
+                out.flush();
             }
 
-            String requestPwd = input.readUTF();
+            msg = input.readObject();
+            String requestPwd = "";
+            
+            if (msg instanceof String) {
+                requestPwd = msg.toString();
+            }
+
             if(requestPwd.equals("Log dich mit deinem Passwort ein:") ||
                 requestPwd.equals("Registriere dich mit deinem Passwort:")) {
-                out.writeUTF(this.pwd);
+                out.writeObject(this.pwd);
+                out.flush();
+                System.out.println(requestPwd);
             }
            
            while(!socket.isClosed()) {
-            if (input.available() != 0) {
-                    String response = input.readUTF();
-                    chat.setText(chat.getText() + response + "\n");
-                    System.out.println(response);
+            
+            msg = input.readObject();
+            if (msg instanceof String) {
+                String response = msg.toString();
+                chat.setText(chat.getText() + response + "\n");
+                System.out.println(response);
+
                 if (response.equals("exit")) {
-                    out.writeUTF(response);
-                    socket.close();
+                out.writeObject(response);
+                socket.close();
                 }
             }
             sleep(50);
         }
             
-        } catch (Exception e) {
+        } catch (IOException ie) {
+            System.out.println("IOException occured in client main: " + ie + ie.getStackTrace());
+        } catch (ClassNotFoundException ce) {
+            System.out.println("ClassNotFoundException occured in client main: " + ce.getStackTrace());
+        }catch (Exception e) {
             System.out.println("Exception occured in client main: " + e.getStackTrace());
         } 
     }
 
     public void send(String msg) {
         try{
-            DataOutputStream out = new DataOutputStream(socket.getOutputStream());
-            out.writeUTF(msg);
+            out.writeObject(msg);
         } catch (IOException e) {
             System.out.println("IOException occurd in Main" + e);
         }
