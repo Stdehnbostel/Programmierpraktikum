@@ -7,6 +7,7 @@ public class ChatClientUI extends JFrame {
     private JTextArea chatArea;
     private JTextArea userList;
     private JTextField inputField;
+    private JButton sendButton;
     private Main socketConnection;
     private String chat;
 
@@ -46,7 +47,13 @@ public class ChatClientUI extends JFrame {
                 socketConnection.send(inputField.getText());
             }
         });
-
+        sendButton = new JButton("Senden");
+        sendButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                
+            }
+        });
     }
 
     private void layoutComponents() {
@@ -58,7 +65,10 @@ public class ChatClientUI extends JFrame {
         scrollChat.setViewportView(chatArea);
         scrollChat.setVerticalScrollBar(scrollChat.createVerticalScrollBar());
         chatPanel.add(scrollChat, BorderLayout.CENTER);
-        chatPanel.add(inputField, BorderLayout.SOUTH);
+        JPanel userInputs = new JPanel(new BorderLayout());
+        userInputs.add(inputField, BorderLayout.CENTER);
+        userInputs.add(sendButton, BorderLayout.EAST);
+        chatPanel.add(userInputs, BorderLayout.SOUTH);
 
         JPanel userListPanel = new JPanel(new BorderLayout());
         userListPanel.add(new JLabel("User List"), BorderLayout.NORTH);
