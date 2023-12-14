@@ -59,11 +59,20 @@ public class ServerThread extends Thread implements Serializable {
                     online = false;
                     msg.sendToAllClients("* " + this.userName + " hat sich abgemeldet! *");
                     chat.append("* " + this.userName + " hat sich abgemeldet! *" + "\n");
+                    String userList = msg.generateUserList(threadList);
+                    Message users = new Message("String", userList);
+                    msg.sendToAllClients(users);
                     break;
+                } else {
+                    msg.sendToAllClients("[" + this.userName + "]: " + outputString);
+                    chat.append("[" + this.userName + "]: " + outputString + "\n");
                 }
-                msg.sendToAllClients("[" + this.userName + "]: " + outputString);
-                chat.append("[" + this.userName + "]: " + outputString + "\n");
+                
                 System.out.println("Server received " + outputString);
+
+                if (in instanceof Message) {
+                    msg.sendToAllClients(in);
+                }
             }
 
 

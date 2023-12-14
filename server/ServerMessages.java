@@ -41,7 +41,7 @@ public class ServerMessages extends Thread {
                 out.writeObject(msg);
                 out.flush();
             } catch (IOException e) {
-                System.out.println("IOExeption occurred in sendServerMessage()");
+                System.out.println("IOExeption occurred in sendServerMessage()" + e);
             }
         }
     }

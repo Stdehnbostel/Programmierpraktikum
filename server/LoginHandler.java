@@ -63,7 +63,7 @@ public class LoginHandler extends Thread {
                 newUser = "* " + userName + " hat sich registriert! *";
                 chat.append(newUser + "\n");
                 String userList = msg.generateUserList(clients);
-                UserList users = new UserList(userList);
+                Message users = new Message("String", userList);
                 System.out.println("send User List: \n");
                 System.out.println(users);
                 msg.sendToAllClients(users);
@@ -89,7 +89,7 @@ public class LoginHandler extends Thread {
                     out.flush();
                     newUser = "* " + userName + " hat sich angemeldet! *";
                     String userList = msg.generateUserList(clients);
-                    UserList users = new UserList(userList);
+                    Message users = new Message("String", userList);
                     System.out.println("send User List: \n");
                     System.out.println(users);
                     out.writeObject(users);
@@ -106,7 +106,7 @@ public class LoginHandler extends Thread {
             }
     
             String userList = msg.generateUserList(clients);
-            UserList users = new UserList(userList);
+            Message users = new Message("String", userList);
             System.out.println("send User List: \n");
             System.out.println(users);
             out.writeObject(users);

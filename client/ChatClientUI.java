@@ -51,7 +51,8 @@ public class ChatClientUI extends JFrame {
         sendButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                
+                String msg = "./Hase.png";
+                socketConnection.sendPic(msg);
             }
         });
     }
