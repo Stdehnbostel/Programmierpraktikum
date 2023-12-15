@@ -2,13 +2,16 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.File;
 
 public class ChatClientUI extends JFrame {
     private JTextArea chatArea;
     private JTextArea userList;
     private JTextField inputField;
     private JButton sendButton;
+    private JButton fileButton;
     private Main socketConnection;
+    private JFileChooser fileChooser;
     private String chat;
 
     public ChatClientUI() {
@@ -55,6 +58,26 @@ public class ChatClientUI extends JFrame {
                 socketConnection.sendPic(msg);
             }
         });
+        String icon = "";
+        byte[] bIcon = {(byte) 0x1F, (byte) 0xC4};
+        try {
+            icon = new String(bIcon, "UTF-8");
+        } catch (Exception e) {
+            System.out.println("Encoding Exception occured " + e);
+        }
+        
+        fileChooser = new JFileChooser();
+        fileButton = new JButton(icon);
+        fileButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                int returnVal = fileChooser.showOpenDialog(inputField);
+                System.out.println(returnVal);
+                File f = fileChooser.getSelectedFile();
+                inputField.setText(f.toString());
+                socketConnection.sendPic(f.toString());
+            }
+        });
     }
 
     private void layoutComponents() {
@@ -69,6 +92,7 @@ public class ChatClientUI extends JFrame {
         JPanel userInputs = new JPanel(new BorderLayout());
         userInputs.add(inputField, BorderLayout.CENTER);
         userInputs.add(sendButton, BorderLayout.EAST);
+        userInputs.add(fileButton, BorderLayout.WEST);
         chatPanel.add(userInputs, BorderLayout.SOUTH);
 
         JPanel userListPanel = new JPanel(new BorderLayout());
