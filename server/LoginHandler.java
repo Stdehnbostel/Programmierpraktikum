@@ -92,6 +92,7 @@ public class LoginHandler extends Thread {
                     Message users = new Message("String", userList);
                     System.out.println("send User List: \n");
                     System.out.println(users);
+                    msg.sendToAllClients(users);
                     out.writeObject(users);
                     out.flush();
                     chat.append(newUser + "\n");
