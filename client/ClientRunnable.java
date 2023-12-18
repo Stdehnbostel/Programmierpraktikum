@@ -2,9 +2,6 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Socket;
-import java.util.Scanner;
-
-import javax.swing.JPanel;
 import javax.swing.JTextArea;
 
 public class ClientRunnable extends Thread {

@@ -46,16 +46,15 @@ public class ChatClientUI extends JFrame {
         inputField.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                //tba
-                socketConnection.send(inputField.getText());
+                // socketConnection.send(inputField.getText());
             }
         });
         sendButton = new JButton("Senden");
         sendButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                String msg = "./Hase.png";
-                socketConnection.sendPic(msg);
+                socketConnection.send(inputField.getText());
+                inputField.setText("");
             }
         });
         String icon = "";
