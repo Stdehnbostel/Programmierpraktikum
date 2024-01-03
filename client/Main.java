@@ -1,21 +1,21 @@
-import java.awt.FlowLayout;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.io.OutputStream;
 import java.net.Socket;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.Base64;
 import java.util.LinkedList;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import javax.imageio.ImageIO;
-import javax.swing.ImageIcon;
-import javax.swing.JFrame;
-import javax.swing.JLabel;
 import javax.swing.JTextArea;
 
 public class Main extends Thread {
@@ -99,12 +99,12 @@ public class Main extends Thread {
             boolean isImage = false;
             Pattern format = Pattern.compile(".*.png");
             boolean isPdf = false;
-            Pattern Pdf = Pattern.compile(".*.pdf");
+            Pattern formatPdf = Pattern.compile(".*.pdf");
             
             if (msg instanceof Message) {
                 Matcher matcher = format.matcher(((Message)msg).type);
                 isImage = matcher.matches();
-                matcher = Pdf.matcher(((Message)msg).type);
+                matcher = formatPdf.matcher(((Message)msg).type);
                 isPdf = matcher.matches();
             }
             
@@ -132,9 +132,10 @@ public class Main extends Thread {
                 System.out.println("received a BufferedImage");
                 try {
                     File out = new File("../a.out.pdf");
-                    
-                    BufferedImage bimg = ImageIO.read(new ByteArrayInputStream(Base64.getDecoder().decode((String)img.msg)));
-                    ImageIO.write(bimg, "pdf", out);
+                    byte[] pdf = Base64.getDecoder().decode((String)img.msg);
+                    FileOutputStream fis = new FileOutputStream(out);
+                    fis.write(pdf);  
+                    fis.close();
                 } catch (IOException e) {
                     System.out.println("IOExeption occured sending file");
                 }
@@ -184,17 +185,14 @@ public class Main extends Thread {
     }
 
     public void sendPdf(String msg) {
-        File f = new File(msg + "disabled");
+        File f = new File(msg);
         BufferedImage bimg;
         
         if (f.isFile()) {
             System.out.println("Send: " + msg);
             try {
-                bimg = ImageIO.read(f);
-                ByteArrayOutputStream baos = new ByteArrayOutputStream();
-                ImageIO.write(bimg, "pdf", baos);
-                baos.close();
-                Message pic = new Message(msg, Base64.getEncoder().encodeToString(baos.toByteArray()));
+                byte[] pdf = Files.readAllBytes(Paths.get(msg));
+                Message pic = new Message(msg, Base64.getEncoder().encodeToString(pdf));
                 out.writeObject(pic);
                 out.flush();
             

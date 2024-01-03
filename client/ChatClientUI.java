@@ -5,6 +5,8 @@ import java.awt.event.ActionListener;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.util.LinkedList;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class ChatClientUI extends JFrame {
     private JTextArea chatArea;
@@ -96,7 +98,15 @@ public class ChatClientUI extends JFrame {
                 System.out.println(returnVal);
                 File f = fileChooser.getSelectedFile();
                 inputField.setText(f.toString());
-                socketConnection.sendPic(f.toString());
+                Pattern pdf = Pattern.compile(".*.pdf");
+                Matcher matcher = pdf.matcher(f.toString());
+                if(matcher.matches()) {
+                    System.out.println("Send a pdf...");
+                    socketConnection.sendPdf(f.toString());
+                } else {
+                    socketConnection.sendPic(f.toString());
+                }
+                
             }
         });
     }
