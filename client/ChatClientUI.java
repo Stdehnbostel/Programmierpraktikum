@@ -177,7 +177,7 @@ public class ChatClientUI extends JFrame {
 
     private void askToShowPicture(BufferedImage img) {
         JFrame dialog = new JFrame();
-        dialog.setSize(200, 100);
+        dialog.setSize(400, 100);
         dialog.setLocationRelativeTo(null);
         JPanel askBtnPanel = new JPanel(new FlowLayout());
         JLabel askForPermission = new JLabel("Ein Bild wurde empfangen. Soll es angezeigt werden?");
@@ -189,9 +189,10 @@ public class ChatClientUI extends JFrame {
             showPicture(img);
             }
         });
+        askBtnPanel.add(askForPermission);
+        askBtnPanel.add(askBtn);
 
-        dialog.add(askForPermission);
-        dialog.add(askBtn);
+        dialog.add(askBtnPanel);
         dialog.setVisible(true);
     }
 
