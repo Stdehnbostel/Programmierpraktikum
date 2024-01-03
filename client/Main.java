@@ -1,20 +1,21 @@
+import java.awt.FlowLayout;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
 import java.util.Base64;
 import java.util.LinkedList;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javax.imageio.ImageIO;
+import javax.swing.ImageIcon;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
 import javax.swing.JTextArea;
 
 public class Main extends Thread {
@@ -26,9 +27,11 @@ public class Main extends Thread {
     private JTextArea chat;
     private JTextArea userList;
     private ObjectOutputStream out;
+    private LinkedList<BufferedImage> images;
 
-    public Main(String serverName) {
+    public Main(String serverName, LinkedList<BufferedImage> imgs) {
         this.serverName = serverName;
+        this.images = imgs;
     }
 
     public void run() {
@@ -93,21 +96,50 @@ public class Main extends Thread {
                 String response = msg.toString();
                 userList.setText(response);
             }
-
-            if (msg instanceof Message && ((Message)msg).type.equals("img")) {
+            boolean isImage = false;
+            Pattern format = Pattern.compile(".*.png");
+            boolean isPdf = false;
+            Pattern Pdf = Pattern.compile(".*.pdf");
+            
+            if (msg instanceof Message) {
+                Matcher matcher = format.matcher(((Message)msg).type);
+                isImage = matcher.matches();
+                matcher = Pdf.matcher(((Message)msg).type);
+                isPdf = matcher.matches();
+            }
+            
+            System.out.println(isImage);
+            if (msg instanceof Message && isImage) {
                 Message img = (Message)msg;
+                
 
                 System.out.println("received a BufferedImage");
                 try {
                     File out = new File("../hase.png");
                     
+                    BufferedImage newImg = ImageIO.read(new ByteArrayInputStream(Base64.getDecoder().decode((String)img.msg)));
+                    ImageIO.write(newImg, "png", out);
+                    images.add(newImg);
+                } catch (IOException e) {
+                    System.out.println("IOExeption occured sending file");
+                }
+            }
+
+            if (msg instanceof Message && isPdf) {
+                Message img = (Message)msg;
+                
+
+                System.out.println("received a BufferedImage");
+                try {
+                    File out = new File("../a.out.pdf");
+                    
                     BufferedImage bimg = ImageIO.read(new ByteArrayInputStream(Base64.getDecoder().decode((String)img.msg)));
-                    ImageIO.write(bimg, "png", out);
+                    ImageIO.write(bimg, "pdf", out);
                 } catch (IOException e) {
                     System.out.println("IOExeption occured sending file");
                 }
             } else {
-                System.out.println("Not a File");
+                System.out.println("Not a Pdf");
             }
         }
             
@@ -116,7 +148,7 @@ public class Main extends Thread {
         } catch (ClassNotFoundException ce) {
             System.out.println("ClassNotFoundException occured in client main: " + ce.getStackTrace());
         }catch (Exception e) {
-            System.out.println("Exception occured in client main: " + e.getStackTrace());
+            System.out.println("Exception occured in client main: " + e.getStackTrace() + e);
         } 
     }
 
@@ -140,10 +172,29 @@ public class Main extends Thread {
                 ByteArrayOutputStream baos = new ByteArrayOutputStream();
                 ImageIO.write(bimg, "png", baos);
                 baos.close();
-                Message pic = new Message("img", Base64.getEncoder().encodeToString(baos.toByteArray()));
+                Message pic = new Message(msg, Base64.getEncoder().encodeToString(baos.toByteArray()));
+                out.writeObject(pic);
+                out.flush();
+            
+            } catch (IOException e) {
+                System.out.println("IOException occurd in Main" + e);
+            }
+        }
+        
+    }
 
-                
-
+    public void sendPdf(String msg) {
+        File f = new File(msg + "disabled");
+        BufferedImage bimg;
+        
+        if (f.isFile()) {
+            System.out.println("Send: " + msg);
+            try {
+                bimg = ImageIO.read(f);
+                ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                ImageIO.write(bimg, "pdf", baos);
+                baos.close();
+                Message pic = new Message(msg, Base64.getEncoder().encodeToString(baos.toByteArray()));
                 out.writeObject(pic);
                 out.flush();
             

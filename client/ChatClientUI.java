@@ -2,7 +2,9 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.image.BufferedImage;
 import java.io.File;
+import java.util.LinkedList;
 
 public class ChatClientUI extends JFrame {
     private JTextArea chatArea;
@@ -13,10 +15,13 @@ public class ChatClientUI extends JFrame {
     private Main socketConnection;
     private JFileChooser fileChooser;
     private String chat;
+    private LinkedList<BufferedImage> images;
 
     public ChatClientUI() {
         this.chat = "";
-        this.socketConnection = new Main("localhost");
+        this.images = new LinkedList<BufferedImage>();
+        this.socketConnection = new Main("localhost", this.images);
+        
         setTitle("Chat Client");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setSize(500, 400);
@@ -24,6 +29,23 @@ public class ChatClientUI extends JFrame {
 
         initComponents();
         layoutComponents();
+        Thread waitForImges = new Thread() {
+            @Override
+            public void run() {
+                while(true) {
+                    if(!images.isEmpty()) {
+                        askToShowPicture(images.pop());
+                    }
+                    try {
+                        sleep(50);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                }
+                
+            }
+        };
+        waitForImges.start();
 
         setVisible(true);
     }
@@ -33,8 +55,8 @@ public class ChatClientUI extends JFrame {
         
         chatArea.setEditable(false);
         chatArea.setText(chat);
-        socketConnection.setChat(chatArea);
         chatArea.setVisible(true);
+        socketConnection.setChat(chatArea);
 
         userList = new JTextArea();
         userList.setEditable(false);
@@ -151,6 +173,34 @@ public class ChatClientUI extends JFrame {
 
         loginFrame.add(loginPanel);
         loginFrame.setVisible(true);
+    }
+
+    private void askToShowPicture(BufferedImage img) {
+        JFrame dialog = new JFrame();
+        dialog.setSize(200, 100);
+        dialog.setLocationRelativeTo(null);
+        JPanel askBtnPanel = new JPanel(new FlowLayout());
+        JLabel askForPermission = new JLabel("Ein Bild wurde empfangen. Soll es angezeigt werden?");
+        JButton askBtn = new JButton("Bild anzeigen?");
+        askBtn.addActionListener(new ActionListener() {
+
+            @Override
+            public void actionPerformed(ActionEvent e) {
+            showPicture(img);
+            }
+        });
+
+        dialog.add(askForPermission);
+        dialog.add(askBtn);
+        dialog.setVisible(true);
+    }
+
+    public void showPicture(BufferedImage img) {
+        JFrame pic = new JFrame();
+        pic.getContentPane().setLayout(new FlowLayout());
+        pic.getContentPane().add(new JLabel(new ImageIcon(img)));
+        pic.pack();
+        pic.setVisible(true);
     }
 
     public static void main(String[] args) {
