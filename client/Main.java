@@ -89,7 +89,6 @@ public class Main extends Thread {
             if (msg instanceof String) {
                 String response = msg.toString();
                 chat.setText(chat.getText() + response + "\n");
-                System.out.println(response);
 
                 if (response.equals("exit")) {
                 out.writeObject(response);

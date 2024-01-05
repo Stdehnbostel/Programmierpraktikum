@@ -256,8 +256,7 @@ public class ChatClientUI extends JFrame {
     }
 
     private void askToShowPdf(byte[] pdf) {
-        
-        
+          
         JFrame dialog = new JFrame();
         dialog.setSize(400, 100);
         dialog.setLocationRelativeTo(null);

@@ -1,4 +1,7 @@
+import java.io.DataInputStream;
+import java.io.IOException;
 import java.io.ObjectInputStream;
+import java.io.ObjectOutput;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.net.Socket;
@@ -60,11 +63,10 @@ public class ServerThread extends Thread implements Serializable {
                     Message users = new Message("String", userList);
                     msg.sendToAllClients(users);
                     break;
-                } else {
+                } else if (!(in instanceof Message)) {
                     msg.sendToAllClients("[" + this.userName + "]: " + outputString);
                     chat.append("[" + this.userName + "]: " + outputString + "\n");
                 }
-                
                 System.out.println("Server received " + outputString);
 
                 if (in instanceof Message) {

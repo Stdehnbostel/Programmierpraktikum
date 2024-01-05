@@ -1,17 +1,14 @@
 import java.io.Serializable;
 
 public class UserList implements Serializable {
-    
-    public String type;
-    public Object msg;
+    public String msg;
 
-    UserList(String type, Object msg) {
-        this.type = type;
+    UserList(String msg) {
         this.msg = msg;
     }
 
     @Override
     public String toString() {
-        return this.msg.toString();
+        return this.msg;
     }
 }
