@@ -28,10 +28,14 @@ public class Main extends Thread {
     private JTextArea userList;
     private ObjectOutputStream out;
     private LinkedList<BufferedImage> images;
+    private LinkedList<byte[]> pdfs;
 
-    public Main(String serverName, LinkedList<BufferedImage> imgs) {
+    public Main(String serverName, 
+                LinkedList<BufferedImage> imgs,
+                LinkedList<byte[]> pdfs) {
         this.serverName = serverName;
         this.images = imgs;
+        this.pdfs = pdfs;
     }
 
     public void run() {
@@ -128,17 +132,9 @@ public class Main extends Thread {
             if (msg instanceof Message && isPdf) {
                 Message img = (Message)msg;
                 
-
                 System.out.println("received a BufferedImage");
-                try {
-                    File out = new File("../a.out.pdf");
-                    byte[] pdf = Base64.getDecoder().decode((String)img.msg);
-                    FileOutputStream fis = new FileOutputStream(out);
-                    fis.write(pdf);  
-                    fis.close();
-                } catch (IOException e) {
-                    System.out.println("IOExeption occured sending file");
-                }
+                byte[] pdf = Base64.getDecoder().decode((String)img.msg);
+                this.pdfs.add(pdf);
             } else {
                 System.out.println("Not a Pdf");
             }
@@ -186,7 +182,6 @@ public class Main extends Thread {
 
     public void sendPdf(String msg) {
         File f = new File(msg);
-        BufferedImage bimg;
         
         if (f.isFile()) {
             System.out.println("Send: " + msg);

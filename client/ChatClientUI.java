@@ -4,6 +4,8 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.image.BufferedImage;
 import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.util.LinkedList;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -11,6 +13,7 @@ import java.util.regex.Pattern;
 public class ChatClientUI extends JFrame {
     private JTextArea chatArea;
     private JTextArea userList;
+    private JTextArea roomList;
     private JTextField inputField;
     private JButton sendButton;
     private JButton fileButton;
@@ -18,11 +21,13 @@ public class ChatClientUI extends JFrame {
     private JFileChooser fileChooser;
     private String chat;
     private LinkedList<BufferedImage> images;
+    private LinkedList<byte[]> pdfs;
 
     public ChatClientUI() {
         this.chat = "";
         this.images = new LinkedList<BufferedImage>();
-        this.socketConnection = new Main("localhost", this.images);
+        this.pdfs = new LinkedList<byte[]>();
+        this.socketConnection = new Main("localhost", this.images, this.pdfs);
         
         setTitle("Chat Client");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -49,6 +54,24 @@ public class ChatClientUI extends JFrame {
         };
         waitForImges.start();
 
+        Thread waitForPdfs = new Thread() {
+            @Override
+            public void run() {
+                while(true) {
+                    if(!pdfs.isEmpty()) {
+                        askToShowPdf(pdfs.pop());
+                    }
+                    try {
+                        sleep(50);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                }
+                
+            }
+        };
+        waitForPdfs.start();
+
         setVisible(true);
     }
 
@@ -64,6 +87,11 @@ public class ChatClientUI extends JFrame {
         userList.setEditable(false);
         userList.setVisible(true);
         userList.setBackground(getForeground());
+
+        roomList = new JTextArea();
+        roomList.setEditable(false);
+        roomList.setVisible(true);
+        roomList.setBackground(getForeground());
         socketConnection.setUserList(userList);
 
         inputField = new JTextField();
@@ -126,14 +154,27 @@ public class ChatClientUI extends JFrame {
         userInputs.add(fileButton, BorderLayout.WEST);
         chatPanel.add(userInputs, BorderLayout.SOUTH);
 
+        JPanel roomsAndUsers = new JPanel(new BorderLayout());
         JPanel userListPanel = new JPanel(new BorderLayout());
         userListPanel.add(new JLabel("User List"), BorderLayout.NORTH);
         JScrollPane scrollUsers = new JScrollPane();
         scrollUsers.setViewportView(userList);
         scrollUsers.setVerticalScrollBar(scrollUsers.createVerticalScrollBar());
         userListPanel.add(scrollUsers, BorderLayout.CENTER);
+        JPanel roomListPanel = new JPanel(new BorderLayout());
+        roomListPanel.add(new JLabel("Räume"), BorderLayout.NORTH);
+        JScrollPane scrollRooms = new JScrollPane();
+        scrollRooms.setViewportView(roomList);
+        scrollRooms.setVerticalScrollBar(scrollRooms.createVerticalScrollBar());
+        roomListPanel.add(scrollRooms, BorderLayout.CENTER);
 
-        JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, chatPanel, userListPanel);
+        JSplitPane splitUsersAndRooms = new JSplitPane(JSplitPane.VERTICAL_SPLIT, userListPanel, roomListPanel);
+        splitUsersAndRooms.setResizeWeight(0.7);
+    
+        roomsAndUsers.add(splitUsersAndRooms, BorderLayout.CENTER);
+        
+
+        JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, chatPanel, roomsAndUsers);
         splitPane.setResizeWeight(0.7);
 
         add(splitPane, BorderLayout.CENTER);
@@ -212,6 +253,44 @@ public class ChatClientUI extends JFrame {
         pic.getContentPane().add(new JLabel(new ImageIcon(img)));
         pic.pack();
         pic.setVisible(true);
+    }
+
+    private void askToShowPdf(byte[] pdf) {
+        
+        
+        JFrame dialog = new JFrame();
+        dialog.setSize(400, 100);
+        dialog.setLocationRelativeTo(null);
+            JPanel askBtnPanel = new JPanel(new FlowLayout());
+        JLabel askForPermission = new JLabel("Ein PDF wurde empfangen. Soll es angezeigt werden?");
+        JButton askBtn = new JButton("PDF anzeigen?");
+        askBtn.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                showPdf(pdf);
+            }
+        });
+        askBtnPanel.add(askForPermission);
+        askBtnPanel.add(askBtn);
+
+        dialog.add(askBtnPanel);
+        dialog.setVisible(true);
+    }
+
+    public void showPdf(byte[] pdf) {
+        try {
+            File f = new File("../temp.pdf");
+            FileOutputStream fos = new FileOutputStream(f);
+            fos.write(pdf);
+            fos.close();
+
+            if (Desktop.isDesktopSupported()) {
+            
+                Desktop.getDesktop().open(f);
+            }
+        } catch (IOException e) {
+            System.out.println("IOExeption occured in Main" + e + e.getStackTrace());
+        }
     }
 
     public static void main(String[] args) {
