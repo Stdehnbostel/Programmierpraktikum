@@ -2,6 +2,7 @@ import java.io.BufferedReader;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.ObjectOutputStream;
 import java.net.ServerSocket;
 import java.util.ArrayList;
 
@@ -33,16 +34,19 @@ public class ServerMessages extends Thread {
         }
     }
 
-    public void sendToClient(ServerThread client, String msg) {
-        try {
-            DataOutputStream out = new DataOutputStream(client.getSocket().getOutputStream());
-            out.writeUTF(msg);
-        } catch (IOException e) {
-            System.out.println("IOExeption occurred in sendServerMessage()");
+    public void sendToClient(ServerThread client, Object msg) {
+        if(client.getOnlineStatus() == true) {
+            try {
+                ObjectOutputStream out = client.getObjectOutputStream();
+                out.writeObject(msg);
+                out.flush();
+            } catch (IOException e) {
+                System.out.println("IOExeption occurred in sendServerMessage()");
+            }
         }
     }
 
-    public void sendToAllClients(String msg) {
+    public void sendToAllClients(Object msg) {
 
         for(ServerThread sT: clients) {
             sendToClient(sT, msg);
@@ -51,7 +55,7 @@ public class ServerMessages extends Thread {
 
     public String generateUserList(ArrayList<ServerThread> clients) {
     
-        StringBuilder users = new StringBuilder("Auf dem Server:\nOnline:\n");
+        StringBuilder users = new StringBuilder("Online:\n");
         int userNumber = 0;
         for (ServerThread sT : clients) {
             if (sT.getOnlineStatus()) {
