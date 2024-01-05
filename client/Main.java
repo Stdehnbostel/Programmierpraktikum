@@ -99,26 +99,49 @@ public class Main extends Thread {
                 String response = msg.toString();
                 userList.setText(response);
             }
-            boolean isImage = false;
-            Pattern format = Pattern.compile(".*.png");
+
+            boolean isPng = false;
+            Pattern formatPng = Pattern.compile(".*.png");
+            boolean isJpeg = false;
+            Pattern formatJpeg = Pattern.compile(".*.jpg");
+            boolean isBmp = false;
+            Pattern formatBmp = Pattern.compile(".*.bmp");
+            boolean isGif = false;
+            Pattern formatGif = Pattern.compile(".*.gif");
             boolean isPdf = false;
             Pattern formatPdf = Pattern.compile(".*.pdf");
             
             if (msg instanceof Message) {
-                Matcher matcher = format.matcher(((Message)msg).type);
-                isImage = matcher.matches();
+                Matcher matcher = formatPng.matcher(((Message)msg).type);
+                isPng = matcher.matches();
+                matcher = formatJpeg.matcher(((Message)msg).type);
+                isJpeg = matcher.matches();
+                matcher = formatBmp.matcher(((Message)msg).type);
+                isBmp = matcher.matches();
+                matcher = formatGif.matcher(((Message)msg).type);
+                isGif = matcher.matches();
                 matcher = formatPdf.matcher(((Message)msg).type);
                 isPdf = matcher.matches();
             }
-            
-            System.out.println(isImage);
+            boolean isImage = isPdf || isJpeg || isBmp || isGif;
+            System.out.println(isPng || isJpeg);
             if (msg instanceof Message && isImage) {
                 Message img = (Message)msg;
                 
+                String fileName = "";
+                if (isPng) {
+                    fileName = "temp.png";
+                } else if (isJpeg) {
+                    fileName = "temp.jpg";
+                } else if (isBmp) {
+                    fileName = "temp.bmp";
+                } else if (isGif) {
+                    fileName = "temp.gif";
+                }
 
                 System.out.println("received a BufferedImage");
                 try {
-                    File out = new File("../hase.png");
+                    File out = new File(fileName);
                     
                     BufferedImage newImg = ImageIO.read(new ByteArrayInputStream(Base64.getDecoder().decode((String)img.msg)));
                     ImageIO.write(newImg, "png", out);
@@ -160,13 +183,36 @@ public class Main extends Thread {
     public void sendPic(String msg) {
         File f = new File(msg);
         BufferedImage bimg;
+        String format = "";
         
         if (f.isFile()) {
             System.out.println("Send: " + msg);
+            Pattern formatPng = Pattern.compile(".*.png");
+            Matcher matcherPng = formatPng.matcher(msg);
+
+            Pattern formatJpeg = Pattern.compile(".*.jpg");
+            Matcher matcherJpeg = formatJpeg.matcher(msg);
+
+            Pattern formatBmp = Pattern.compile(".*.bmp");
+            Matcher matcherBmp = formatBmp.matcher(msg);
+
+            Pattern formatGif = Pattern.compile(".*.gif");
+            Matcher matcherGif = formatGif.matcher(msg);
+
+            if (matcherPng.matches()) {
+                format = "png";
+            } else if (matcherJpeg.matches()) {
+                format = "jpg";
+            } else if (matcherBmp.matches()) {
+                format = "bmp";
+            } else if (matcherGif.matches()) {
+                format = "gif";
+            }
+
             try {
                 bimg = ImageIO.read(f);
                 ByteArrayOutputStream baos = new ByteArrayOutputStream();
-                ImageIO.write(bimg, "png", baos);
+                ImageIO.write(bimg, format, baos);
                 baos.close();
                 Message pic = new Message(msg, Base64.getEncoder().encodeToString(baos.toByteArray()));
                 out.writeObject(pic);
