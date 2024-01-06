@@ -52,6 +52,13 @@ public class ServerMessages extends Thread {
         }
     }
 
+    public void sendToSomeClients(ArrayList<ServerThread> clients, Object msg) {
+        
+        for (ServerThread sT: clients) {
+            sendToClient(sT, msg);
+        }
+    }
+
     public String generateUserList(ArrayList<ServerThread> clients) {
     
         StringBuilder users = new StringBuilder("Online:\n");

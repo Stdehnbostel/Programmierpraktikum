@@ -93,6 +93,7 @@ public class ChatClientUI extends JFrame {
         roomList.setVisible(true);
         roomList.setBackground(getForeground());
         socketConnection.setUserList(userList);
+        socketConnection.setRoomList(roomList);
 
         inputField = new JTextField();
         inputField.addActionListener(new ActionListener() {

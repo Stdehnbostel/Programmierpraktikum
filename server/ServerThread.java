@@ -1,12 +1,8 @@
-import java.io.DataInputStream;
-import java.io.IOException;
 import java.io.ObjectInputStream;
-import java.io.ObjectOutput;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.net.Socket;
 import java.util.ArrayList;
-
 import javax.swing.JTextArea;
 
 public class ServerThread extends Thread implements Serializable {

@@ -18,9 +18,11 @@ public class RunServer {
     private ServerMessages msg;
     private JTextArea chat;
     private ArrayList<ServerThread> clients;
+    private ArrayList<Room> rooms;
 
     RunServer(JTextArea chat) {
         this.chat = chat;
+        this.rooms = new ArrayList<Room>();
     }
 
     public void startServer() {
@@ -50,7 +52,6 @@ public class RunServer {
         }
 
         System.out.println(this.clients == null);
-        // this.clients = new ArrayList<ServerThread>();
         
         try {
             this.server = new ServerSocket(1234);
@@ -62,7 +63,7 @@ public class RunServer {
                     break;
                 }
                 Socket client = server.accept();
-                LoginHandler newUser = new LoginHandler(client, clients, chat);
+                LoginHandler newUser = new LoginHandler(client, clients, chat, getRoomList());
                 newUser.start();
                 
             }
@@ -95,6 +96,49 @@ public class RunServer {
             fout.close();
         } catch (IOException e) {
             System.out.println("IOExeption occured in RunServer" + e);
+        }
+    }
+
+    public void addRoom(Room room) {
+        this.rooms.add(room);
+        sendRoomList();
+    }
+
+    public String getRoomList() {
+        StringBuilder roomList = new StringBuilder();
+        for (Room room: rooms) {
+            roomList.append(room.getName() + "\n");
+        }
+        return roomList.toString();
+    }
+
+    public boolean isRoom(String name) {
+        for (Room room: rooms) {
+            if (room.getName().equals(name)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    // return type boolean allows for notification of succes
+    public boolean deleteRoom(String name) {
+        for (Room room: rooms) {
+            if(room.getName().equals(name)) {
+                this.rooms.remove(room);
+                return true;
+            }
+        }
+ 
+        sendRoomList();
+
+        return false;
+    }
+
+    private void sendRoomList() {
+
+        if (server != null && !server.isClosed()) {
+        msg.sendToAllClients(new Message("Rooms", getRoomList()));
         }
     }
 }

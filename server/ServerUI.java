@@ -134,8 +134,30 @@ public class ServerUI extends JFrame {
                 }
             }    
         };
+
+        ActionListener createRoom = new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                String roomName = newChatroomField.getText();
+                if (!roomName.equals("") && !server.isRoom(roomName)) {
+                    Room room = new Room(roomName);
+                    server.addRoom(room);   
+                } // else { implement error warning }
+                chatroomTextArea.setText(server.getRoomList());
+            }
+        };
+
+        ActionListener deleteRoom = new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                server.deleteRoom(newChatroomField.getText());
+                chatroomTextArea.setText(server.getRoomList());
+            }
+        };
     
     toggleServerButton.addActionListener(toggleServerButtonOnClick);
+    createChatroomButton.addActionListener(createRoom);
+    deleteChatroomButton.addActionListener(deleteRoom);
     }
     
 

@@ -26,6 +26,7 @@ public class Main extends Thread {
     private Socket socket;
     private JTextArea chat;
     private JTextArea userList;
+    private JTextArea roomList;
     private ObjectOutputStream out;
     private LinkedList<BufferedImage> images;
     private LinkedList<byte[]> pdfs;
@@ -100,6 +101,11 @@ public class Main extends Thread {
                 userList.setText(response);
             }
 
+            if (msg instanceof Message && ((Message)msg).type.equals("Rooms")) {
+                String response = msg.toString();
+                roomList.setText(response);
+            }
+            
             boolean isPng = false;
             Pattern formatPng = Pattern.compile(".*.png");
             boolean isJpeg = false;
@@ -257,5 +263,9 @@ public class Main extends Thread {
 
     public void setUserList(JTextArea userList) {
         this.userList = userList;
+    }
+
+    public void setRoomList(JTextArea roomList) {
+        this.roomList = roomList;
     }
 }
