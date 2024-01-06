@@ -11,11 +11,16 @@ public class LoginHandler extends Thread {
     private Socket client;
     private ArrayList<ServerThread> clients;
     private JTextArea chat;
+    private String roomList;
 
-    public LoginHandler(Socket client, ArrayList<ServerThread> clients, JTextArea chat) {
+    public LoginHandler(Socket client, 
+                        ArrayList<ServerThread> clients, 
+                        JTextArea chat,
+                        String roomList) {
         this.client = client;
         this.clients = clients;
         this.chat = chat;
+        this.roomList = roomList;
     }
 
     public void run() {
@@ -108,6 +113,9 @@ public class LoginHandler extends Thread {
             System.out.println("send User List: \n");
             System.out.println(users);
             out.writeObject(users);
+            out.flush();
+            Message rooms = new Message("Rooms", roomList);
+            out.writeObject(rooms);
             out.flush();
 
         } catch (IOException e) {
