@@ -9,28 +9,10 @@ public class ServerMessages extends Thread {
 
     public String msg;
     private ArrayList<ServerThread> clients;
-    private ServerSocket server;
 
-    ServerMessages(ArrayList<ServerThread> clients, ServerSocket server) {
+    ServerMessages(ArrayList<ServerThread> clients) {
         this.msg = "";
         this.clients = clients;
-        this.server = server;
-    }
-
-    public void run() {
-
-        while (!this.msg.equals("exit")) {
-            try {
-                BufferedReader input = new BufferedReader(new InputStreamReader(System.in));
-                this.msg = input.readLine();    
-                sendToAllClients(msg);
-                if (this.msg.equals("exit")) {
-                    server.close();
-                }            
-            } catch (IOException e) {
-                System.out.println("IOExeption occurred in sendServerMessage()");
-            }
-        }
     }
 
     public void sendToClient(ServerThread client, Object msg) {
@@ -46,10 +28,12 @@ public class ServerMessages extends Thread {
     }
 
     public void sendToAllClients(Object msg) {
-
+        System.out.println(clients != null);
+        System.out.println(clients.isEmpty());
         for(ServerThread sT: clients) {
             sendToClient(sT, msg);
         }
+        System.out.println("send to all Clients... done");
     }
 
     public void sendToSomeClients(ArrayList<ServerThread> clients, Object msg) {
@@ -79,5 +63,21 @@ public class ServerMessages extends Thread {
             }
         }
         return users.toString();    
-    }    
+    }
+
+    public String generateRoomList(ArrayList<Room> rooms) {
+       
+        StringBuilder roomList = new StringBuilder();
+        
+        for (Room room: rooms) {
+            roomList.append(room.getName() + "\n");
+        }
+
+        return roomList.toString();
+    }
+
+    public void setClientList(ArrayList<ServerThread> clinets) {
+        this.clients = clinets;
+    }
 }
+

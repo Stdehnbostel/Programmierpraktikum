@@ -23,6 +23,7 @@ public class RunServer {
     RunServer(JTextArea chat) {
         this.chat = chat;
         this.rooms = new ArrayList<Room>();
+        this.msg = new ServerMessages(this.clients);
     }
 
     public void startServer() {
@@ -41,6 +42,7 @@ public class RunServer {
                     sT.setThreadList(clients);
                     sT.setChat(chat);
                     sT.setOnlineStatus(false);
+                    sT.setRoomList(rooms);
                 }
             } else {
                 this.clients = new ArrayList<ServerThread>();
@@ -52,38 +54,38 @@ public class RunServer {
         }
 
         System.out.println(this.clients == null);
+        this.msg.setClientList(clients);
         
         try {
             this.server = new ServerSocket(1234);
-            this.msg = new ServerMessages(clients, server);
-            msg.start();
             while(runServer) {
                 if (msg.msg.equals("exit")) {
                     runServer = false;
                     break;
                 }
                 Socket client = server.accept();
-                LoginHandler newUser = new LoginHandler(client, clients, chat, getRoomList());
+                LoginHandler newUser = new LoginHandler(client, clients, chat, rooms);
                 newUser.start();
                 
             }
         } catch (Exception e) {
-            System.out.println("Error occured in main: " + e.getStackTrace());
+            System.out.println("Error occured in main: " + e + e.getStackTrace());
         }
     }
 
     public void exitServer() {
         try {
             this.msg.sendToAllClients("exit");
-            this.server.close();
             PrintWriter toFile = new PrintWriter("Protokoll.txt");
             String log = chat.getText();
             toFile.write(log);
             toFile.flush();
+            System.out.println("should have saved: \n" + log);
             toFile.close();
             saveUserData();
+            this.server.close();
         } catch (Exception e) {
-            System.out.println("Error occured in main: " + e.getStackTrace());
+            System.out.println("Error occured in main: " + e + e.getStackTrace());
         }
     }
 
@@ -105,11 +107,7 @@ public class RunServer {
     }
 
     public String getRoomList() {
-        StringBuilder roomList = new StringBuilder();
-        for (Room room: rooms) {
-            roomList.append(room.getName() + "\n");
-        }
-        return roomList.toString();
+        return msg.generateRoomList(rooms);
     }
 
     public boolean isRoom(String name) {
@@ -138,7 +136,7 @@ public class RunServer {
     private void sendRoomList() {
 
         if (server != null && !server.isClosed()) {
-        msg.sendToAllClients(new Message("Rooms", getRoomList()));
+        msg.sendToAllClients(new Message("Rooms", msg.generateRoomList(rooms)));
         }
     }
 }

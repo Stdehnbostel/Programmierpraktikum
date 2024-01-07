@@ -6,6 +6,8 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -168,9 +170,17 @@ public class ChatClientUI extends JFrame {
         scrollRooms.setViewportView(roomList);
         scrollRooms.setVerticalScrollBar(scrollRooms.createVerticalScrollBar());
         roomListPanel.add(scrollRooms, BorderLayout.CENTER);
+        JButton chooseRoomButton = new JButton("Raum\n wählen");
+        chooseRoomButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                openChooseRoomWindow(roomList.getText());
+            }
+        });
+        roomListPanel.add(chooseRoomButton, BorderLayout.SOUTH);
 
         JSplitPane splitUsersAndRooms = new JSplitPane(JSplitPane.VERTICAL_SPLIT, userListPanel, roomListPanel);
-        splitUsersAndRooms.setResizeWeight(0.7);
+        splitUsersAndRooms.setResizeWeight(0.6);
     
         roomsAndUsers.add(splitUsersAndRooms, BorderLayout.CENTER);
         
@@ -227,6 +237,46 @@ public class ChatClientUI extends JFrame {
         loginFrame.setVisible(true);
     }
 
+    private void openChooseRoomWindow(String roomList) {
+
+        ArrayList<String> rooms = new ArrayList<String>(Arrays.asList(roomList.split("\n")));
+        JFrame chooseFrame = new JFrame("Raum wählen");
+        chooseFrame.setSize(400, 500);
+        
+        JPanel chooseRoomPanel = new JPanel(new BorderLayout());
+        chooseRoomPanel.add(new JLabel("Räume"), BorderLayout.NORTH);
+        JPanel roomListPanel = new JPanel(new BorderLayout());
+        JScrollPane scrollRooms = new JScrollPane();
+        JTextArea roomListArea = new JTextArea(roomList);
+        roomListArea.setEditable(false);
+        scrollRooms.setViewportView(roomListArea);
+        scrollRooms.setVerticalScrollBar(scrollRooms.createVerticalScrollBar());
+        roomListPanel.add(scrollRooms, BorderLayout.CENTER);
+        JTextArea roomName = new JTextArea();
+        roomListPanel.add(roomName, BorderLayout.SOUTH);
+        chooseRoomPanel.add(roomListPanel, BorderLayout.CENTER); 
+        JButton chooseRoomButton = new JButton("Raum\n wählen");
+
+        chooseRoomButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                String room = roomName.getText();
+                if (rooms.contains(room)) {
+                    System.out.println("Raum gefunden");
+                    socketConnection.sendMessage(new Message("Room", room));
+                    socketConnection.setRoom(room);
+                } else if (room.equals("")) {
+                    socketConnection.sendMessage(new Message("Room", room));
+                    socketConnection.setRoom(room);
+                    System.out.println("Verlasse Raum");
+                }
+            }
+        });
+        chooseRoomPanel.add(chooseRoomButton, BorderLayout.SOUTH);
+
+        chooseFrame.add(chooseRoomPanel);
+        chooseFrame.setVisible(true);
+    }
     private void askToShowPicture(BufferedImage img) {
         JFrame dialog = new JFrame();
         dialog.setSize(400, 100);

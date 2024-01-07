@@ -9,8 +9,9 @@ public class ServerThread extends Thread implements Serializable {
 
     public transient Socket client;
     private transient ArrayList<ServerThread> threadList;
+    private transient ArrayList<Room> roomList;
     public String userName;
-    public String room;
+    public Room room;
     private String pwd;
     private boolean online;
     private transient JTextArea chat;
@@ -20,6 +21,7 @@ public class ServerThread extends Thread implements Serializable {
     public ServerThread(
         Socket socket, 
         ArrayList<ServerThread> threads, 
+        ArrayList<Room> roomList,
         String name, 
         String pwd, 
         JTextArea chat, 
@@ -27,17 +29,19 @@ public class ServerThread extends Thread implements Serializable {
         ObjectOutputStream out) {
         this.client = socket;
         this.threadList = threads;
+        this.roomList = roomList;
         this.userName = name;
         this.pwd = pwd;
         this.online = true;
         this.chat = chat;
         this.input = input;
         this.out = out;
+        this.room = null;
     }
 
     @Override
     public void run() {
-        ServerMessages msg = new ServerMessages(threadList, null);
+        ServerMessages msg = new ServerMessages(threadList);
         try {
             //Reading the input from Client
 
@@ -66,7 +70,34 @@ public class ServerThread extends Thread implements Serializable {
                 System.out.println("Server received " + outputString);
 
                 if (in instanceof Message) {
-                    msg.sendToAllClients(in);
+                    Message incoming = (Message)in;
+                    if (incoming.type.equals("Room") && !((String)incoming.msg).equals("")) {
+                        for (Room room: roomList) {
+                            if (room.getName().equals((String)incoming.msg)) {
+                                this.room = room;
+                                for (ServerThread client: threadList) {
+                                    if (client.userName.equals(this.userName)) {
+                                        room.addUser(client);
+                                        System.out.println("Add user to room");
+                                    }
+                                }
+                            }
+                        } 
+                    } else if (incoming.type.equals("Room") && ((String)incoming.msg).equals("")) {
+                        for (ServerThread client: this.room.getUserList()) {
+                            if (client.userName.equals(this.userName)) {
+                                this.room.removeUser(client);
+                                System.out.println("remove user from room");
+                                this.room = null; 
+                            }
+                        }
+                        this.room = null;
+                    } else if (this.room != null) {
+                        msg.sendToSomeClients(room.getUserList(), in);
+                    } else {
+                        msg.sendToAllClients(in);
+                    }
+                    System.out.println("Room is set? " + this.room != null);
                 }
             }
 
@@ -74,6 +105,9 @@ public class ServerThread extends Thread implements Serializable {
         } catch (Exception e) {
             System.out.println("Error occured " + e.getStackTrace());
             online = false;
+            String userList = msg.generateUserList(threadList);
+            Message users = new Message("String", userList);
+            msg.sendToAllClients(users);
             msg.sendToAllClients("* " + this.userName + " hat sich abgemeldet! *");
             chat.append("* " + this.userName + " hat sich abgemeldet! *" + "\n");
         }
@@ -107,7 +141,21 @@ public class ServerThread extends Thread implements Serializable {
         this.threadList = tl;
     }
 
+    public void setRoomList(ArrayList<Room> roomList) {
+        this.roomList = roomList;
+    }
+
     public void setChat(JTextArea chat) {
         this.chat = chat;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (o instanceof ServerThread) {
+            if (((ServerThread)o).userName.compareTo(this.userName) == 0) {
+                return true;
+            }
+        }
+        return false;
     }
 }

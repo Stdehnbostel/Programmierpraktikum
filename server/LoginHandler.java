@@ -11,12 +11,12 @@ public class LoginHandler extends Thread {
     private Socket client;
     private ArrayList<ServerThread> clients;
     private JTextArea chat;
-    private String roomList;
+    private ArrayList<Room> roomList;
 
     public LoginHandler(Socket client, 
                         ArrayList<ServerThread> clients, 
                         JTextArea chat,
-                        String roomList) {
+                        ArrayList<Room> roomList) {
         this.client = client;
         this.clients = clients;
         this.chat = chat;
@@ -28,7 +28,7 @@ public class LoginHandler extends Thread {
     }
 
     private void processLoginRequest() {
-        ServerMessages msg = new ServerMessages(clients, null);
+        ServerMessages msg = new ServerMessages(clients);
         
         try {
             ObjectOutputStream out = new ObjectOutputStream(client.getOutputStream());
@@ -59,7 +59,7 @@ public class LoginHandler extends Thread {
                 if (pw instanceof String) {
                     pwd = pw.toString();
                 }
-                comThread = new ServerThread(client, clients, userName, pwd, chat, in, out);
+                comThread = new ServerThread(client, clients, roomList, userName, pwd, chat, in, out);
                 clients.add(comThread);
                 comThread.start();
                 newUser = "* " + userName + " hat sich registriert! *";
@@ -84,7 +84,7 @@ public class LoginHandler extends Thread {
                     System.out.println("Passwort korrekt");
                     // Password is correct
                     clients.remove(comThread);
-                    comThread = new ServerThread(client, clients, userName, pwd, chat, in, out);
+                    comThread = new ServerThread(client, clients, roomList, userName, pwd, chat, in, out);
                     clients.add(comThread);
                     comThread.start();
                     out.writeObject("Login erfolgreich!");
@@ -114,7 +114,7 @@ public class LoginHandler extends Thread {
             System.out.println(users);
             out.writeObject(users);
             out.flush();
-            Message rooms = new Message("Rooms", roomList);
+            Message rooms = new Message("Rooms", msg.generateRoomList(roomList));
             out.writeObject(rooms);
             out.flush();
 

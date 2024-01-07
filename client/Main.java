@@ -27,6 +27,7 @@ public class Main extends Thread {
     private JTextArea chat;
     private JTextArea userList;
     private JTextArea roomList;
+    private String room;
     private ObjectOutputStream out;
     private LinkedList<BufferedImage> images;
     private LinkedList<byte[]> pdfs;
@@ -37,6 +38,7 @@ public class Main extends Thread {
         this.serverName = serverName;
         this.images = imgs;
         this.pdfs = pdfs;
+        this.room = "";
     }
 
     public void run() {
@@ -133,7 +135,6 @@ public class Main extends Thread {
 
             if (msg instanceof Message && isImage) {
                 Message img = (Message)msg;
-               System.out.println("type " + isPng + isJpeg + isBmp + isGif);
                 String fileName = "";
                 if (isPng) {
                     fileName = "temp.png";
@@ -276,5 +277,9 @@ public class Main extends Thread {
 
     public void setRoomList(JTextArea roomList) {
         this.roomList = roomList;
+    }
+
+    public void setRoom(String room) {
+        this.room = room;
     }
 }

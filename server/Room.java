@@ -18,6 +18,10 @@ public class Room {
         this.users.add(user);
     }
 
+    public void removeUser(ServerThread user) {
+        this.users.remove(user);
+    }
+
     public String getName() {
         return this.name;
     }
