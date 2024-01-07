@@ -129,11 +129,11 @@ public class Main extends Thread {
                 matcher = formatPdf.matcher(((Message)msg).type);
                 isPdf = matcher.matches();
             }
-            boolean isImage = isPdf || isJpeg || isBmp || isGif;
-            System.out.println(isPng || isJpeg);
+            boolean isImage = isPng || isJpeg || isBmp || isGif;
+
             if (msg instanceof Message && isImage) {
                 Message img = (Message)msg;
-                
+               System.out.println("type " + isPng + isJpeg + isBmp + isGif);
                 String fileName = "";
                 if (isPng) {
                     fileName = "temp.png";
@@ -178,6 +178,15 @@ public class Main extends Thread {
     }
 
     public void send(String msg) {
+        try {
+            out.writeObject(msg);
+            out.flush();
+        } catch (IOException e) {
+            System.out.println("IOException occurd in Main" + e);
+        }
+    }
+
+    public void sendMessage(Message msg) {
         try {
             out.writeObject(msg);
             out.flush();
