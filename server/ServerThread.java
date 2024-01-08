@@ -11,7 +11,7 @@ public class ServerThread extends Thread implements Serializable {
     private transient ArrayList<ServerThread> threadList;
     private transient ArrayList<Room> roomList;
     public String userName;
-    public Room room;
+    public String room;
     private String pwd;
     private boolean online;
     private transient JTextArea chat;
@@ -36,7 +36,7 @@ public class ServerThread extends Thread implements Serializable {
         this.chat = chat;
         this.input = input;
         this.out = out;
-        this.room = null;
+        this.room = "";
     }
 
     @Override
@@ -74,7 +74,7 @@ public class ServerThread extends Thread implements Serializable {
                     if (incoming.type.equals("Room") && !((String)incoming.msg).equals("")) {
                         for (Room room: roomList) {
                             if (room.getName().equals((String)incoming.msg)) {
-                                this.room = room;
+                                this.room = room.getName();
                                 for (ServerThread client: threadList) {
                                     if (client.userName.equals(this.userName)) {
                                         room.addUser(client);
@@ -84,26 +84,19 @@ public class ServerThread extends Thread implements Serializable {
                             }
                         } 
                     } else if (incoming.type.equals("Room") && ((String)incoming.msg).equals("")) {
-                        for (ServerThread client: this.room.getUserList()) {
-                            if (client.userName.equals(this.userName)) {
-                                this.room.removeUser(client);
-                                System.out.println("remove user from room");
-                                this.room = null; 
-                            }
-                        }
-                        this.room = null;
-                    } else if (this.room != null) {
-                        msg.sendToSomeClients(room.getUserList(), in);
+                        msg.removeUserFromRoom(userName, room, roomList);
+                        this.room = "";
+                    } else if (!this.room.equals("")) {
+                        msg.sendToRoom(room, roomList, in);
                     } else {
                         msg.sendToAllClients(in);
                     }
-                    System.out.println("Room is set? " + this.room != null);
                 }
             }
 
 
         } catch (Exception e) {
-            System.out.println("Error occured " + e.getStackTrace());
+            System.out.println("Error occured " + e + e.getStackTrace());
             online = false;
             String userList = msg.generateUserList(threadList);
             Message users = new Message("String", userList);

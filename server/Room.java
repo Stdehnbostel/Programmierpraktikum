@@ -1,4 +1,5 @@
 import java.util.ArrayList;
+import java.util.Iterator;
 
 public class Room {
 
@@ -19,7 +20,13 @@ public class Room {
     }
 
     public void removeUser(ServerThread user) {
-        this.users.remove(user);
+        System.out.println("trying to remove user...");
+        users.removeIf(u -> user.equals(user));
+    }
+    
+    public void removeUser(String userName) {
+        System.out.println("trying to remove user...");
+        users.removeIf(u -> userName.equals(userName));
     }
 
     public String getName() {
@@ -28,5 +35,13 @@ public class Room {
 
     public ArrayList<ServerThread> getUserList() {
         return this.users;
+    }
+
+    @Override 
+    public boolean equals(Object o) {
+        if (o instanceof Room && ((Room)o).getName().equals(this.name)) {
+            return true;
+        }
+        return false;
     }
 }

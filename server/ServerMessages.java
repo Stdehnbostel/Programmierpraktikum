@@ -4,6 +4,7 @@ import java.io.InputStreamReader;
 import java.io.ObjectOutputStream;
 import java.net.ServerSocket;
 import java.util.ArrayList;
+import java.util.Iterator;
 
 public class ServerMessages extends Thread {
 
@@ -36,11 +37,36 @@ public class ServerMessages extends Thread {
         System.out.println("send to all Clients... done");
     }
 
-    public void sendToSomeClients(ArrayList<ServerThread> clients, Object msg) {
-        
-        for (ServerThread sT: clients) {
+    public void sendToRoom(String roomName, ArrayList<Room> rooms, Object msg) {
+        Room room = null;
+        for (Room r: rooms) {
+            if (r.getName().equals(roomName)) {
+                room = r;
+            }
+        }
+        if (room == null) {
+            System.out.println("Error: Room not found");
+            return;
+        }
+        for (ServerThread sT: room.getUserList()) {
             sendToClient(sT, msg);
         }
+    }
+
+    public void removeUserFromRoom(String userName, String roomName, ArrayList<Room> rooms) {
+        Room room = null;
+        for (Iterator<Room> it = rooms.iterator(); it.hasNext();) {
+            Room r = it.next();
+            if (r.getName().equals(roomName)) {
+                room = r;
+            }
+        }
+        if (room == null) {
+            System.out.println("Error: Room not found");
+            return;
+        }
+        room.removeUser(userName);
+
     }
 
     public String generateUserList(ArrayList<ServerThread> clients) {
