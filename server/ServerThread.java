@@ -63,9 +63,12 @@ public class ServerThread extends Thread implements Serializable {
                     Message users = new Message("String", userList);
                     msg.sendToAllClients(users);
                     break;
-                } else if (!(in instanceof Message)) {
+                } else if (!(in instanceof Message) && room.equals("")) {
                     msg.sendToAllClients("[" + this.userName + "]: " + outputString);
                     chat.append("[" + this.userName + "]: " + outputString + "\n");
+                } else if (!(in instanceof Message) && !room.equals("")) {
+                    msg.sendToRoom(room, roomList, "[Raum: " + room + "] [" + this.userName + "]: " + outputString);
+                    chat.append("[Raum: " + room + "] [" + this.userName + "]: " + outputString + "\n");
                 }
                 System.out.println("Server received " + outputString);
 
