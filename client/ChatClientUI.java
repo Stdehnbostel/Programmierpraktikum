@@ -6,6 +6,7 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.ObjectInputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedList;
@@ -83,7 +84,6 @@ public class ChatClientUI extends JFrame {
         chatArea.setEditable(false);
         chatArea.setText(chat);
         chatArea.setVisible(true);
-        socketConnection.setChat(chatArea);
 
         userList = new JTextArea();
         userList.setEditable(false);
@@ -221,7 +221,9 @@ public class ChatClientUI extends JFrame {
                 //tba
                 socketConnection.setUserName(usernameField.getText());
                 socketConnection.setPwd(new String(passwordField.getPassword()));
-                socketConnection.start();
+                ObjectInputStream in = socketConnection.login();
+                Thread updateChat = new Thread(() -> getChatInput(in));
+                updateChat.start();
                 loginFrame.dispose();
             }
         });
@@ -264,10 +266,8 @@ public class ChatClientUI extends JFrame {
                 if (rooms.contains(room)) {
                     System.out.println("Raum gefunden");
                     socketConnection.sendMessage(new Message("Room", room));
-                    socketConnection.setRoom(room);
                 } else if (room.equals("")) {
                     socketConnection.sendMessage(new Message("Room", room));
-                    socketConnection.setRoom(room);
                     System.out.println("Verlasse Raum");
                 }
             }
@@ -340,6 +340,28 @@ public class ChatClientUI extends JFrame {
             }
         } catch (IOException e) {
             System.out.println("IOExeption occured in Main" + e + e.getStackTrace());
+        }
+    }
+
+    private void getChatInput(ObjectInputStream in) {
+        while (!socketConnection.getSocket().isClosed()) {
+            try {
+                Object msg = in.readObject();
+                if (msg instanceof String) {
+                    SwingUtilities.invokeLater(new Runnable() {
+                        @Override
+                        public void run() {
+                            chatArea.setText(chatArea.getText() + "\n" + msg);
+                        }
+                    });
+                } else if (msg instanceof Message) {
+                    socketConnection.decodeMessage((Message)msg);
+                }
+            } catch (ClassNotFoundException ce) {
+                System.out.println("" + ce + ce.getStackTrace());
+            } catch (IOException e) {
+                System.out.println("" + e + e.getStackTrace());
+            }
         }
     }
 

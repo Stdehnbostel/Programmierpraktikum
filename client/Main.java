@@ -22,11 +22,10 @@ public class Main extends Thread {
     private String userName;
     private String pwd;
     private Socket socket;
-    private JTextArea chat;
     private JTextArea userList;
     private JTextArea roomList;
-    private String room;
     private ObjectOutputStream out;
+    ObjectInputStream in;
     private LinkedList<BufferedImage> images;
     private LinkedList<byte[]> pdfs;
 
@@ -36,10 +35,9 @@ public class Main extends Thread {
         this.serverName = serverName;
         this.images = imgs;
         this.pdfs = pdfs;
-        this.room = "";
     }
 
-    public void run() {
+    public ObjectInputStream login() {
         
         try {
             this.socket = new Socket(serverName, 1234);
@@ -75,25 +73,8 @@ public class Main extends Thread {
                 out.flush();
                 System.out.println(requestPwd);
             }
-           
-        while(!socket.isClosed()) {
-            
-            msg = input.readObject();
 
-            if (msg instanceof String) {
-                String response = msg.toString();
-                chat.setText(chat.getText() + response + "\n");
-
-                if (response.equals("exit")) {
-                out.writeObject(response);
-                socket.close();
-                }
-            }
-            if (msg instanceof Message) {
-                decodeMessage((Message)msg);
-            }
-        }
-            
+            return input;
         } catch (IOException ie) {
             System.out.println("IOException occured in client main: " + ie + ie.getStackTrace());
         } catch (ClassNotFoundException ce) {
@@ -101,6 +82,8 @@ public class Main extends Thread {
         }catch (Exception e) {
             System.out.println("Exception occured in client main: " + e.getStackTrace() + e);
         } 
+
+        return null;
     }
 
     public void send(String msg) {
@@ -161,6 +144,14 @@ public class Main extends Thread {
         
     }
 
+    public ObjectInputStream getObjectInputStream() {
+        return in;
+    }
+
+    public Socket getSocket() {
+        return socket;
+    }
+
     public void setUserName(String userName) {
         this.userName = userName;
     }
@@ -169,20 +160,12 @@ public class Main extends Thread {
         this.pwd = pwd;
     }
 
-    public void setChat(JTextArea chat) {
-        this.chat = chat;
-    }
-
     public void setUserList(JTextArea userList) {
         this.userList = userList;
     }
 
     public void setRoomList(JTextArea roomList) {
         this.roomList = roomList;
-    }
-
-    public void setRoom(String room) {
-        this.room = room;
     }
 
     private String getFormat(String filePath) {
@@ -228,8 +211,8 @@ public class Main extends Thread {
             }
             
             String fileEnding = getFormat(((Message)msg).type);
-            boolean isImage = !fileEnding.equals("") && !fileEnding.equals(".pdf");
-            boolean isPdf = fileEnding.equals(".pdf");
+            boolean isImage = !fileEnding.equals("") && !fileEnding.equals("pdf");
+            boolean isPdf = fileEnding.equals("pdf");
 
             if (isImage) {
                 showImage(msg, fileEnding);
