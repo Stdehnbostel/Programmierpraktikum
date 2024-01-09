@@ -2,6 +2,9 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.lang.reflect.Array;
+import java.util.ArrayList;
+import java.util.Arrays;
 
 public class ServerUI extends JFrame {
     private JTextArea chatArea;
@@ -122,15 +125,37 @@ public class ServerUI extends JFrame {
 
         RunServer server = new RunServer(chatArea);
 
+        Thread showUserList = new Thread() {
+            @Override
+            public void run() {
+                while (serverStateLabel.getText().equals("Server State: On")) {
+                    SwingUtilities.invokeLater( new Runnable() {
+                        @Override
+                        public void run() {
+                            userList.setText(server.getUserList());
+                        }
+                    });
+                    try{
+                        sleep(50);
+                    } catch (InterruptedException e) {
+                            System.out.println("Interrupted Exception orrured in ServerUI: " + e + e.getStackTrace());
+                    }
+                }
+
+            }
+        };
+
         ActionListener toggleServerButtonOnClick = new ActionListener() {
             @Override public void actionPerformed(ActionEvent e) {
                 if (serverStateLabel.getText() == "Server State: Off") {
                     Thread serverThread = new Thread(() -> server.startServer());
                     serverThread.start();
                     serverStateLabel.setText("Server State: On");
+                    showUserList.start();
                 } else {
                     server.exitServer();
                     serverStateLabel.setText("Server State: Off");
+                    userList.setText("");
                 }
             }    
         };
@@ -154,10 +179,51 @@ public class ServerUI extends JFrame {
                 chatroomTextArea.setText(server.getRoomList());
             }
         };
+
+        ActionListener showWarnUserWindow = new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                if (serverStateLabel.getText().equals("Server State: On")) {
+                    ServerThread user = server.getClient(userField.getText());
+                    if (user == null) {
+                        userModerationTextArea.setText(userModerationTextArea.getText() + "User not found\n");
+                        return;
+                    }
+                    warnUser(server, user, userModerationTextArea);    
+                }
+            }
+        };
     
-    toggleServerButton.addActionListener(toggleServerButtonOnClick);
-    createChatroomButton.addActionListener(createRoom);
-    deleteChatroomButton.addActionListener(deleteRoom);
+        toggleServerButton.addActionListener(toggleServerButtonOnClick);
+        createChatroomButton.addActionListener(createRoom);
+        deleteChatroomButton.addActionListener(deleteRoom);
+        warnButton.addActionListener(showWarnUserWindow);
+    }
+
+    private void warnUser(RunServer server, ServerThread user, JTextArea userModeration) {
+        JFrame warnFrame = new JFrame("Warn: " + user.userName);
+        warnFrame.setSize(400, 100);
+        warnFrame.setLocationRelativeTo(null);
+        JPanel warnPanel= new JPanel(new GridLayout(2, 1));
+        JPanel dialogPanel = new JPanel(new BorderLayout());
+        JLabel messageLabel = new JLabel("Message");
+        JTextArea message = new JTextArea();
+        dialogPanel.add(messageLabel, BorderLayout.WEST);
+        dialogPanel.add(message, BorderLayout.CENTER);
+        JButton askBtn = new JButton("send warning");
+        askBtn.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                server.sendToUser(user, "[VERWARNUNG]: " + message.getText());
+                    userModeration.setText(user.userName + "[WARNED]: " + message.getText());
+                    warnFrame.dispose();
+            }
+        });
+        warnPanel.add(dialogPanel);
+        warnPanel.add(askBtn);
+
+        warnFrame.add(warnPanel);
+        warnFrame.setVisible(true);
     }
     
 

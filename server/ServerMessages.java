@@ -16,7 +16,7 @@ public class ServerMessages extends Thread {
         this.clients = clients;
     }
 
-    public void sendToClient(ServerThread client, Object msg) {
+    public boolean sendToClient(ServerThread client, Object msg) {
         if(client.getOnlineStatus() == true) {
             try {
                 ObjectOutputStream out = client.getObjectOutputStream();
@@ -25,7 +25,34 @@ public class ServerMessages extends Thread {
             } catch (IOException e) {
                 System.out.println("IOExeption occurred in sendServerMessage()" + e);
             }
+            return true;
         }
+        return false;
+    }
+
+    public boolean sentToClient(String usernName, Object msg) {
+        ServerThread client = null; 
+        for (ServerThread cl: clients) {
+            if (cl.userName.equals(usernName)) {
+                client = cl;
+            }
+        }
+
+        if (client == null) {
+            return false;
+        }
+
+        if(client.getOnlineStatus() == true) {
+            try {
+                ObjectOutputStream out = client.getObjectOutputStream();
+                out.writeObject(msg);
+                out.flush();
+            } catch (IOException e) {
+                System.out.println("IOExeption occurred in sendServerMessage()" + e);
+            }
+            return true;
+        }
+        return false;
     }
 
     public void sendToAllClients(Object msg) {
@@ -70,6 +97,9 @@ public class ServerMessages extends Thread {
     }
 
     public String generateUserList(ArrayList<ServerThread> clients) {
+        if (clients == null) {
+            return "";
+        }
     
         StringBuilder users = new StringBuilder("Online:\n");
         int userNumber = 0;
@@ -104,6 +134,9 @@ public class ServerMessages extends Thread {
 
     public void setClientList(ArrayList<ServerThread> clinets) {
         this.clients = clinets;
+    }
+
+    public void sendToClient(String userName, String message) {
     }
 }
 

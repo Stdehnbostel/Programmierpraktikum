@@ -133,10 +133,39 @@ public class RunServer {
         return false;
     }
 
+    public String getUserList() {
+        if (clients == null) {
+            return "";
+        }
+        return msg.generateUserList(clients);
+    }
+
+    public ArrayList<ServerThread> getClients() {
+        return this.clients;
+    }
+
     private void sendRoomList() {
 
         if (server != null && !server.isClosed()) {
         msg.sendToAllClients(new Message("Rooms", msg.generateRoomList(rooms)));
         }
+    }
+
+    public ServerThread getClient(String name) {
+        ServerThread client = null;
+        for (ServerThread c: clients) {
+            if (c.userName.equals(name)) {
+                client = c;
+            }
+        }
+        return client;
+    }
+
+    public void sendToUser(ServerThread client, String message) {
+        msg.sendToClient(client, message);
+    }
+
+    public void sendToUser(String userName, String message) {
+        msg.sendToClient(userName, message);
     }
 }
