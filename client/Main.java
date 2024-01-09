@@ -2,11 +2,9 @@ import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.io.OutputStream;
 import java.net.Socket;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -108,43 +106,17 @@ public class Main extends Thread {
                 roomList.setText(response);
             }
             
-            boolean isPng = false;
-            Pattern formatPng = Pattern.compile(".*.png");
-            boolean isJpeg = false;
-            Pattern formatJpeg = Pattern.compile(".*.jpg");
-            boolean isBmp = false;
-            Pattern formatBmp = Pattern.compile(".*.bmp");
-            boolean isGif = false;
-            Pattern formatGif = Pattern.compile(".*.gif");
-            boolean isPdf = false;
-            Pattern formatPdf = Pattern.compile(".*.pdf");
+            String fileEnding = "";
             
             if (msg instanceof Message) {
-                Matcher matcher = formatPng.matcher(((Message)msg).type);
-                isPng = matcher.matches();
-                matcher = formatJpeg.matcher(((Message)msg).type);
-                isJpeg = matcher.matches();
-                matcher = formatBmp.matcher(((Message)msg).type);
-                isBmp = matcher.matches();
-                matcher = formatGif.matcher(((Message)msg).type);
-                isGif = matcher.matches();
-                matcher = formatPdf.matcher(((Message)msg).type);
-                isPdf = matcher.matches();
+                fileEnding = getFormat(((Message)msg).type);
             }
-            boolean isImage = isPng || isJpeg || isBmp || isGif;
+            boolean isImage = !fileEnding.equals("") && !fileEnding.equals(".pdf");
+            boolean isPdf = fileEnding.equals(".pdf");
 
             if (msg instanceof Message && isImage) {
                 Message img = (Message)msg;
-                String fileName = "";
-                if (isPng) {
-                    fileName = "temp.png";
-                } else if (isJpeg) {
-                    fileName = "temp.jpg";
-                } else if (isBmp) {
-                    fileName = "temp.bmp";
-                } else if (isGif) {
-                    fileName = "temp.gif";
-                }
+                String fileName = "temp" + fileEnding;
 
                 System.out.println("received a BufferedImage");
                 try {
@@ -281,5 +253,35 @@ public class Main extends Thread {
 
     public void setRoom(String room) {
         this.room = room;
+    }
+
+    private String getFormat(String filePath) {
+        Pattern formatPng = Pattern.compile(".*.png");
+        Pattern formatJpeg = Pattern.compile(".*.jpg");
+        Pattern formatBmp = Pattern.compile(".*.bmp");
+        Pattern formatGif = Pattern.compile(".*.gif");
+        Pattern formatPdf = Pattern.compile(".*.pdf");
+
+        Matcher matcher = formatPng.matcher(filePath);
+        if (matcher.matches()) {
+            return ".png";
+        }
+        matcher = formatJpeg.matcher(filePath);
+        if (matcher.matches()) {
+            return ".jpg";
+        }
+        matcher = formatBmp.matcher(filePath);
+        if (matcher.matches()) {
+            return ".bmp";
+        }
+        matcher = formatGif.matcher(filePath);
+        if (matcher.matches()) {
+            return ".gif";
+        }
+        matcher = formatPdf.matcher(filePath);
+        if (matcher.matches()) {
+            return ".pdf";
+        }
+        return "";
     }
 }
