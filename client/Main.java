@@ -76,17 +76,10 @@ public class Main extends Thread {
                 System.out.println(requestPwd);
             }
            
-           while(!socket.isClosed()) {
-            
+        while(!socket.isClosed()) {
             
             msg = input.readObject();
 
-            if (msg instanceof Message) {
-                System.out.print(((Message)msg).type);
-            } else {
-                System.out.print("Not a Message");
-            }
-            
             if (msg instanceof String) {
                 String response = msg.toString();
                 chat.setText(chat.getText() + response + "\n");
@@ -115,29 +108,11 @@ public class Main extends Thread {
             boolean isPdf = fileEnding.equals(".pdf");
 
             if (msg instanceof Message && isImage) {
-                Message img = (Message)msg;
-                String fileName = "temp" + fileEnding;
-
-                System.out.println("received a BufferedImage");
-                try {
-                    File out = new File(fileName);
-                    
-                    BufferedImage newImg = ImageIO.read(new ByteArrayInputStream(Base64.getDecoder().decode((String)img.msg)));
-                    ImageIO.write(newImg, "png", out);
-                    images.add(newImg);
-                } catch (IOException e) {
-                    System.out.println("IOExeption occured sending file");
-                }
+                showImage((Message)msg, fileEnding);
             }
 
             if (msg instanceof Message && isPdf) {
-                Message img = (Message)msg;
-                
-                System.out.println("received a BufferedImage");
-                byte[] pdf = Base64.getDecoder().decode((String)img.msg);
-                this.pdfs.add(pdf);
-            } else {
-                System.out.println("Not a Pdf");
+                showPdf((Message)msg);
             }
         }
             
@@ -283,5 +258,29 @@ public class Main extends Thread {
             return ".pdf";
         }
         return "";
+    }
+
+    private void showImage(Message img, String fileEnding) {
+                String encodedImg = (String)img.msg;
+                String fileName = "temp" + fileEnding;
+
+                System.out.println("received a BufferedImage");
+                try {
+                    File out = new File(fileName);
+                    
+                    BufferedImage newImg = ImageIO.read(new ByteArrayInputStream(Base64.getDecoder().decode(encodedImg)));
+                    ImageIO.write(newImg, "png", out);
+                    images.add(newImg);
+                } catch (IOException e) {
+                    System.out.println("IOExeption occured sending file");
+                }
+
+    }
+
+    private void showPdf(Message msg) {
+                String encodedPdf = (String)msg.msg;
+                System.out.println("received a BufferedImage");
+                byte[] pdf = Base64.getDecoder().decode(encodedPdf);
+                this.pdfs.add(pdf);
     }
 }
