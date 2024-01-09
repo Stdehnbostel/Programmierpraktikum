@@ -89,30 +89,8 @@ public class Main extends Thread {
                 socket.close();
                 }
             }
-            if (msg instanceof Message && ((Message)msg).type.equals("String")) {
-                String response = msg.toString();
-                userList.setText(response);
-            }
-
-            if (msg instanceof Message && ((Message)msg).type.equals("Rooms")) {
-                String response = msg.toString();
-                roomList.setText(response);
-            }
-            
-            String fileEnding = "";
-            
             if (msg instanceof Message) {
-                fileEnding = getFormat(((Message)msg).type);
-            }
-            boolean isImage = !fileEnding.equals("") && !fileEnding.equals(".pdf");
-            boolean isPdf = fileEnding.equals(".pdf");
-
-            if (msg instanceof Message && isImage) {
-                showImage((Message)msg, fileEnding);
-            }
-
-            if (msg instanceof Message && isPdf) {
-                showPdf((Message)msg);
+                decodeMessage((Message)msg);
             }
         }
             
@@ -146,32 +124,9 @@ public class Main extends Thread {
     public void sendPic(String msg) {
         File f = new File(msg);
         BufferedImage bimg;
-        String format = "";
+        String format = getFormat(msg);
         
         if (f.isFile()) {
-            System.out.println("Send: " + msg);
-            Pattern formatPng = Pattern.compile(".*.png");
-            Matcher matcherPng = formatPng.matcher(msg);
-
-            Pattern formatJpeg = Pattern.compile(".*.jpg");
-            Matcher matcherJpeg = formatJpeg.matcher(msg);
-
-            Pattern formatBmp = Pattern.compile(".*.bmp");
-            Matcher matcherBmp = formatBmp.matcher(msg);
-
-            Pattern formatGif = Pattern.compile(".*.gif");
-            Matcher matcherGif = formatGif.matcher(msg);
-
-            if (matcherPng.matches()) {
-                format = "png";
-            } else if (matcherJpeg.matches()) {
-                format = "jpg";
-            } else if (matcherBmp.matches()) {
-                format = "bmp";
-            } else if (matcherGif.matches()) {
-                format = "gif";
-            }
-
             try {
                 bimg = ImageIO.read(f);
                 ByteArrayOutputStream baos = new ByteArrayOutputStream();
@@ -239,42 +194,66 @@ public class Main extends Thread {
 
         Matcher matcher = formatPng.matcher(filePath);
         if (matcher.matches()) {
-            return ".png";
+            return "png";
         }
         matcher = formatJpeg.matcher(filePath);
         if (matcher.matches()) {
-            return ".jpg";
+            return "jpg";
         }
         matcher = formatBmp.matcher(filePath);
         if (matcher.matches()) {
-            return ".bmp";
+            return "bmp";
         }
         matcher = formatGif.matcher(filePath);
         if (matcher.matches()) {
-            return ".gif";
+            return "gif";
         }
         matcher = formatPdf.matcher(filePath);
         if (matcher.matches()) {
-            return ".pdf";
+            return "pdf";
         }
         return "";
     }
 
+    public void decodeMessage(Message msg) {
+
+            if (((Message)msg).type.equals("String")) {
+                String response = msg.toString();
+                userList.setText(response);
+            }
+
+            if (((Message)msg).type.equals("Rooms")) {
+                String response = msg.toString();
+                roomList.setText(response);
+            }
+            
+            String fileEnding = getFormat(((Message)msg).type);
+            boolean isImage = !fileEnding.equals("") && !fileEnding.equals(".pdf");
+            boolean isPdf = fileEnding.equals(".pdf");
+
+            if (isImage) {
+                showImage(msg, fileEnding);
+            }
+
+            if (isPdf) {
+                showPdf(msg);
+            }
+    }
+
     private void showImage(Message img, String fileEnding) {
                 String encodedImg = (String)img.msg;
-                String fileName = "temp" + fileEnding;
+                String fileName = "temp." + fileEnding;
 
                 System.out.println("received a BufferedImage");
                 try {
                     File out = new File(fileName);
                     
                     BufferedImage newImg = ImageIO.read(new ByteArrayInputStream(Base64.getDecoder().decode(encodedImg)));
-                    ImageIO.write(newImg, "png", out);
+                    ImageIO.write(newImg, fileEnding, out);
                     images.add(newImg);
                 } catch (IOException e) {
                     System.out.println("IOExeption occured sending file");
                 }
-
     }
 
     private void showPdf(Message msg) {
