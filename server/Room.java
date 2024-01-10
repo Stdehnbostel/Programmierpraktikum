@@ -36,6 +36,10 @@ public class Room {
         return this.users;
     }
 
+    public int size() {
+        return users.size();
+    }
+
     @Override 
     public boolean equals(Object o) {
         if (o instanceof Room && ((Room)o).getName().equals(this.name)) {

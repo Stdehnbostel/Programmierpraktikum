@@ -121,6 +121,36 @@ public class ServerMessages extends Thread {
         return users.toString();    
     }
 
+    public String gernerateUserListWithRoom(ArrayList<ServerThread> clients) {
+        if (clients == null) {
+            return "";
+        }
+    
+        StringBuilder users = new StringBuilder("Online:\n");
+        int userNumber = 0;
+        for (ServerThread sT : clients) {
+            if (sT.getOnlineStatus()) {
+                userNumber++;
+                users.append(userNumber).append(". [").append(sT.userName).append("]");
+                if (sT.getRoomName().equals("")) {
+                    users.append("\n");
+                } else {
+                    users.append(" @" + sT.getRoomName());
+                }
+            }
+        }
+        if (userNumber != clients.size()) {
+            users.append("Offline:\n");
+            for (ServerThread sT : clients) {
+                if (!sT.getOnlineStatus()) {
+                    userNumber++;
+                    users.append(userNumber).append(". [").append(sT.userName).append("]\n");
+                }
+            }
+        }
+        return users.toString();
+    }
+
     public String generateRoomList(ArrayList<Room> rooms) {
        
         StringBuilder roomList = new StringBuilder();

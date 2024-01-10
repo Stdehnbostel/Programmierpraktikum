@@ -137,7 +137,7 @@ public class RunServer {
         if (clients == null) {
             return "";
         }
-        return msg.generateUserList(clients);
+        return msg.gernerateUserListWithRoom(clients);
     }
 
     public ArrayList<ServerThread> getClients() {

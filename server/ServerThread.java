@@ -145,6 +145,10 @@ public class ServerThread extends Thread implements Serializable {
         this.chat = chat;
     }
 
+    public String getRoomName() {
+        return this.room;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (o instanceof ServerThread) {
