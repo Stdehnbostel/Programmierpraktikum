@@ -9,6 +9,7 @@ import java.util.Arrays;
 public class ServerUI extends JFrame {
     private JTextArea chatArea;
     private JTextArea userList;
+    private JTextArea roomList;
     private JTextField inputField;
 
     public ServerUI() {
@@ -31,6 +32,9 @@ public class ServerUI extends JFrame {
         userList.setEditable(false);
         userList.setBackground(getForeground());
         
+        roomList = new JTextArea();
+        roomList.setEditable(false);
+        roomList.setBackground(getForeground());
 
         inputField = new JTextField();
     }
@@ -82,7 +86,7 @@ public class ServerUI extends JFrame {
         chatroomInputFieldsPanel.add(newChatroomField);
         chatroomInputFieldsPanel.add(chatroomButtonsPanel);
 
-        chatroomPanel.add(new JScrollPane(chatroomTextArea), BorderLayout.CENTER);
+        chatroomPanel.add(new JScrollPane(roomList), BorderLayout.CENTER);
         chatroomPanel.add(chatroomInputFieldsPanel, BorderLayout.SOUTH);
     
         JPanel moderationPanel = new JPanel(new BorderLayout());
@@ -124,6 +128,7 @@ public class ServerUI extends JFrame {
         moderationFrame.setVisible(true);
 
         RunServer server = new RunServer(chatArea);
+        updateRoomList(server); 
 
         Thread showUserList = new Thread() {
             @Override
@@ -168,7 +173,6 @@ public class ServerUI extends JFrame {
                     Room room = new Room(roomName);
                     server.addRoom(room);   
                 } // else { implement error warning }
-                chatroomTextArea.setText(server.getRoomList());
             }
         };
 
@@ -224,6 +228,28 @@ public class ServerUI extends JFrame {
 
         warnFrame.add(warnPanel);
         warnFrame.setVisible(true);
+    }
+    
+    private void updateRoomList(RunServer server) {
+        Thread roomListThread = new Thread() {
+            @Override
+            public void run() {
+                while (true) {
+                    SwingUtilities.invokeLater( new Runnable() {
+                        @Override
+                        public void run() {
+                            roomList.setText(server.getRoomList());
+                        }
+                    });
+                    try{
+                        sleep(50);
+                    } catch (InterruptedException e) {
+                        System.out.println("Interrupted Exception orrured in ServerUI: " + e + e.getStackTrace());
+                    }
+                }
+            }
+        }; 
+        roomListThread.start();
     }
     
 

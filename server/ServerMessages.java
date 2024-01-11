@@ -1,8 +1,5 @@
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.io.ObjectOutputStream;
-import java.net.ServerSocket;
 import java.util.ArrayList;
 import java.util.Iterator;
 
@@ -156,7 +153,7 @@ public class ServerMessages extends Thread {
         StringBuilder roomList = new StringBuilder();
         
         for (Room room: rooms) {
-            roomList.append(room.getName() + "\n");
+            roomList.append(room.getName() + " (" + room.size() + " User)\n");
         }
 
         return roomList.toString();
