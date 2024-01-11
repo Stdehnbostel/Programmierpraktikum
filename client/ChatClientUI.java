@@ -351,7 +351,7 @@ public class ChatClientUI extends JFrame {
                     SwingUtilities.invokeLater(new Runnable() {
                         @Override
                         public void run() {
-                            chatArea.setText(chatArea.getText() + "\n" + msg);
+                            chatArea.setText(chatArea.getText() + msg + "\n");
                         }
                     });
                 } else if (msg instanceof Message) {
