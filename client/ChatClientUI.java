@@ -240,8 +240,8 @@ public class ChatClientUI extends JFrame {
     }
 
     private void openChooseRoomWindow(String roomList) {
-
         ArrayList<String> rooms = new ArrayList<String>(Arrays.asList(roomList.split("\n")));
+        
         JFrame chooseFrame = new JFrame("Raum wählen");
         chooseFrame.setSize(400, 500);
         
@@ -263,7 +263,13 @@ public class ChatClientUI extends JFrame {
             @Override
             public void actionPerformed(ActionEvent e) {
                 String room = roomName.getText();
-                if (rooms.contains(room)) {
+                boolean found = false;
+                for (String r: rooms) {
+                    if (r.contains(room + " (")) {
+                        found = true;
+                    }
+                }
+                if (found) {
                     System.out.println("Raum gefunden");
                     socketConnection.sendMessage(new Message("Room", room));
                 } else if (room.equals("")) {

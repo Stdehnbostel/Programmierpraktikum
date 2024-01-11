@@ -1,5 +1,3 @@
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -123,13 +121,12 @@ public class RunServer {
     public boolean deleteRoom(String name) {
         for (Room room: rooms) {
             if(room.getName().equals(name)) {
+                room.removeAllUsers();
                 this.rooms.remove(room);
+                sendRoomList();
                 return true;
             }
         }
- 
-        sendRoomList();
-
         return false;
     }
 

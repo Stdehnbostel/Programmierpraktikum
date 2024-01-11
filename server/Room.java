@@ -15,7 +15,9 @@ public class Room {
     }
 
     public void addUser(ServerThread user) {
-        this.users.add(user);
+        if (!users.contains(user)) {
+            this.users.add(user);
+        }
     }
 
     public void removeUser(ServerThread user) {
@@ -26,6 +28,13 @@ public class Room {
     public void removeUser(String userName) {
         System.out.println("trying to remove user...");
         users.removeIf(u -> userName.equals(userName));
+    }
+
+    public void removeAllUsers() {
+        for (ServerThread user: users) {
+            user.setRoom("");
+        }
+        users.clear();
     }
 
     public String getName() {

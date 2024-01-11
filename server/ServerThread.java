@@ -81,6 +81,7 @@ public class ServerThread extends Thread implements Serializable {
                                 for (ServerThread client: threadList) {
                                     if (client.userName.equals(this.userName)) {
                                         room.addUser(client);
+                                        msg.sendToAllClients(new Message("Rooms", msg.generateRoomList(roomList)));
                                         System.out.println("Add user to room");
                                     }
                                 }
@@ -88,6 +89,7 @@ public class ServerThread extends Thread implements Serializable {
                         } 
                     } else if (incoming.type.equals("Room") && ((String)incoming.msg).equals("")) {
                         msg.removeUserFromRoom(userName, room, roomList);
+                        msg.sendToAllClients(new Message("Rooms", msg.generateRoomList(roomList)));
                         this.room = "";
                     } else if (!this.room.equals("")) {
                         msg.sendToRoom(room, roomList, in);
@@ -139,6 +141,10 @@ public class ServerThread extends Thread implements Serializable {
 
     public void setRoomList(ArrayList<Room> roomList) {
         this.roomList = roomList;
+    }
+
+    public void setRoom(String roomName) {
+        this.room = roomName;
     }
 
     public void setChat(JTextArea chat) {
