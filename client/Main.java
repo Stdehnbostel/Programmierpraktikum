@@ -229,6 +229,15 @@ public class Main extends Thread {
             }
     }
 
+    public void exit(String msg) {
+                    send(msg);
+                    try {
+                    socket.close();
+                    } catch (IOException e) {
+                        System.out.println("IOException occurred while trying to close socket" + e + e.getStackTrace());
+                    }
+    }
+
     private void showImage(Message img, String fileEnding) {
                 String encodedImg = (String)img.msg;
                 String fileName = "temp." + fileEnding;

@@ -375,6 +375,9 @@ public class ChatClientUI extends JFrame {
             try {
                 Object msg = in.readObject();
                 if (msg instanceof String) {
+                    if (msg.equals("exit")) {
+                        socketConnection.exit((String)msg);
+                }
                     SwingUtilities.invokeLater(new Runnable() {
                         @Override
                         public void run() {
