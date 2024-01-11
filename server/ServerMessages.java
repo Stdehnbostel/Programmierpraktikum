@@ -132,7 +132,7 @@ public class ServerMessages extends Thread {
                 if (sT.getRoomName().equals("")) {
                     users.append("\n");
                 } else {
-                    users.append(" @" + sT.getRoomName());
+                    users.append(" @" + sT.getRoomName() + "\n");
                 }
             }
         }

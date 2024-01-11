@@ -102,12 +102,7 @@ public class ServerThread extends Thread implements Serializable {
 
         } catch (Exception e) {
             System.out.println("Error occured " + e + e.getStackTrace());
-            online = false;
-            String userList = msg.generateUserList(threadList);
-            Message users = new Message("String", userList);
-            msg.sendToAllClients(users);
-            msg.sendToAllClients("* " + this.userName + " hat sich abgemeldet! *");
-            chat.append("* " + this.userName + " hat sich abgemeldet! *" + "\n");
+            logout(msg);
         }
     }
 
@@ -163,5 +158,18 @@ public class ServerThread extends Thread implements Serializable {
             }
         }
         return false;
+    }
+
+    private void logout(ServerMessages msg) {
+            if (!room.equals("")) {
+                msg.removeUserFromRoom(userName, room, roomList);
+            }
+            online = false;
+            String userList = msg.generateUserList(threadList);
+            Message users = new Message("String", userList);
+            msg.sendToAllClients(users);
+            msg.sendToAllClients("* " + this.userName + " hat sich abgemeldet! *");
+            chat.append("* " + this.userName + " hat sich abgemeldet! *" + "\n");
+            msg.sendToAllClients(new Message("Rooms", msg.generateRoomList(roomList)));
     }
 }
