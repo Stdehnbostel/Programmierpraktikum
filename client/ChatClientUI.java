@@ -16,7 +16,6 @@ import java.util.regex.Pattern;
 public class ChatClientUI extends JFrame {
     private JTextArea chatArea;
     private JTextArea userList;
-    private JTextArea roomList;
     private JTextField inputField;
     private JButton sendButton;
     private JButton fileButton;
@@ -25,6 +24,7 @@ public class ChatClientUI extends JFrame {
     private String chat;
     private LinkedList<BufferedImage> images;
     private LinkedList<byte[]> pdfs;
+    private JList<String> chatRoomList;
 
     public ChatClientUI() {
         this.chat = "";
@@ -80,7 +80,6 @@ public class ChatClientUI extends JFrame {
 
     private void initComponents() {
         chatArea = new JTextArea();
-        
         chatArea.setEditable(false);
         chatArea.setText(chat);
         chatArea.setVisible(true);
@@ -90,54 +89,47 @@ public class ChatClientUI extends JFrame {
         userList.setVisible(true);
         userList.setBackground(getForeground());
 
-        roomList = new JTextArea();
-        roomList.setEditable(false);
-        roomList.setVisible(true);
-        roomList.setBackground(getForeground());
+        String[] chatRooms = {"Room 1", "Room 2", "Room 3", "Room 4"};
+        chatRoomList = new JList<>(chatRooms);
+        chatRoomList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        chatRoomList.addListSelectionListener(e -> {
+            String selectedChatRoom = chatRoomList.getSelectedValue();
+            // Handle selected chat room
+        });
         socketConnection.setUserList(userList);
-        socketConnection.setRoomList(roomList);
+        socketConnection.setRoomList(chatRoomList);
 
         inputField = new JTextField();
-        inputField.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                // socketConnection.send(inputField.getText());
-            }
-        });
+        inputField.addActionListener(e -> socketConnection.send(inputField.getText()));
+
         sendButton = new JButton("Senden");
-        sendButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                socketConnection.send(inputField.getText());
-                inputField.setText("");
-            }
+        sendButton.addActionListener(e -> {
+            socketConnection.send(inputField.getText());
+            inputField.setText("");
         });
+
         String icon = "";
         byte[] bIcon = {(byte) 0x1F, (byte) 0xC4};
         try {
             icon = new String(bIcon, "UTF-8");
         } catch (Exception e) {
-            System.out.println("Encoding Exception occured " + e);
+            System.out.println("Encoding Exception occurred " + e);
         }
-        
+
         fileChooser = new JFileChooser();
         fileButton = new JButton(icon);
-        fileButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                int returnVal = fileChooser.showOpenDialog(inputField);
-                System.out.println(returnVal);
-                File f = fileChooser.getSelectedFile();
-                inputField.setText(f.toString());
-                Pattern pdf = Pattern.compile(".*.pdf");
-                Matcher matcher = pdf.matcher(f.toString());
-                if(matcher.matches()) {
-                    System.out.println("Send a pdf...");
-                    socketConnection.sendPdf(f.toString());
-                } else {
-                    socketConnection.sendPic(f.toString());
-                }
-                
+        fileButton.addActionListener(e -> {
+            int returnVal = fileChooser.showOpenDialog(inputField);
+            System.out.println(returnVal);
+            File f = fileChooser.getSelectedFile();
+            inputField.setText(f.toString());
+            Pattern pdf = Pattern.compile(".*.pdf");
+            Matcher matcher = pdf.matcher(f.toString());
+            if (matcher.matches()) {
+                System.out.println("Send a pdf...");
+                socketConnection.sendPdf(f.toString());
+            } else {
+                socketConnection.sendPic(f.toString());
             }
         });
     }
@@ -164,26 +156,23 @@ public class ChatClientUI extends JFrame {
         scrollUsers.setViewportView(userList);
         scrollUsers.setVerticalScrollBar(scrollUsers.createVerticalScrollBar());
         userListPanel.add(scrollUsers, BorderLayout.CENTER);
+        roomsAndUsers.add(userListPanel, BorderLayout.NORTH);
+
         JPanel roomListPanel = new JPanel(new BorderLayout());
         roomListPanel.add(new JLabel("Räume"), BorderLayout.NORTH);
         JScrollPane scrollRooms = new JScrollPane();
-        scrollRooms.setViewportView(roomList);
+        scrollRooms.setViewportView(chatRoomList);
         scrollRooms.setVerticalScrollBar(scrollRooms.createVerticalScrollBar());
         roomListPanel.add(scrollRooms, BorderLayout.CENTER);
+        roomsAndUsers.add(roomListPanel, BorderLayout.SOUTH);
+
         JButton chooseRoomButton = new JButton("Raum\n wählen");
-        chooseRoomButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                openChooseRoomWindow(roomList.getText());
-            }
-        });
+        //chooseRoomButton.addActionListener(e -> openChooseRoomWindow(roomList.getText()));
         roomListPanel.add(chooseRoomButton, BorderLayout.SOUTH);
 
         JSplitPane splitUsersAndRooms = new JSplitPane(JSplitPane.VERTICAL_SPLIT, userListPanel, roomListPanel);
         splitUsersAndRooms.setResizeWeight(0.6);
-    
         roomsAndUsers.add(splitUsersAndRooms, BorderLayout.CENTER);
-        
 
         JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, chatPanel, roomsAndUsers);
         splitPane.setResizeWeight(0.7);
@@ -191,13 +180,15 @@ public class ChatClientUI extends JFrame {
         add(splitPane, BorderLayout.CENTER);
 
         JButton loginButton = new JButton("Anmelden/Registrieren");
-        loginButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                openLoginWindow();
-            }
-        });
+        loginButton.addActionListener(e -> openLoginWindow());
         add(loginButton, BorderLayout.NORTH);
+        initializeChatRoomList();
+    }
+
+    private void initializeChatRoomList() {
+
+
+
     }
 
     private void openLoginWindow() {
@@ -239,7 +230,7 @@ public class ChatClientUI extends JFrame {
         loginFrame.setVisible(true);
     }
 
-    private void openChooseRoomWindow(String roomList) {
+    /*private void openChooseRoomWindow(String roomList) {
 
         ArrayList<String> rooms = new ArrayList<String>(Arrays.asList(roomList.split("\n")));
         JFrame chooseFrame = new JFrame("Raum wählen");
@@ -276,7 +267,7 @@ public class ChatClientUI extends JFrame {
 
         chooseFrame.add(chooseRoomPanel);
         chooseFrame.setVisible(true);
-    }
+    }*/
     private void askToShowPicture(BufferedImage img) {
         JFrame dialog = new JFrame();
         dialog.setSize(400, 100);
