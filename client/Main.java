@@ -14,6 +14,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import javax.imageio.ImageIO;
+import javax.swing.JList;
 import javax.swing.JTextArea;
 
 public class Main extends Thread {
@@ -23,7 +24,7 @@ public class Main extends Thread {
     private String pwd;
     private Socket socket;
     private JTextArea userList;
-    private JTextArea roomList;
+    private JList<String> roomList;
     private ObjectOutputStream out;
     ObjectInputStream in;
     private LinkedList<BufferedImage> images;
@@ -164,7 +165,7 @@ public class Main extends Thread {
         this.userList = userList;
     }
 
-    public void setRoomList(JTextArea roomList) {
+    public void setRoomList(JList<String> roomList) {
         this.roomList = roomList;
     }
 
@@ -207,7 +208,12 @@ public class Main extends Thread {
 
             if (((Message)msg).type.equals("Rooms")) {
                 String response = msg.toString();
-                roomList.setText(response);
+                String[] rooms;
+                rooms = response.split("\n");
+
+                System.out.println("response: " + response); //debug
+                roomList.setListData(rooms);
+
             }
             
             String fileEnding = getFormat(((Message)msg).type);
