@@ -22,12 +22,12 @@ public class Room {
 
     public void removeUser(ServerThread user) {
         System.out.println("trying to remove user...");
-        users.removeIf(u -> user.equals(user));
+        users.removeIf(u -> u.equals(user));
     }
     
     public void removeUser(String userName) {
         System.out.println("trying to remove user...");
-        users.removeIf(u -> userName.equals(userName));
+        users.removeIf(u -> u.userName.equals(userName));
     }
 
     public void removeAllUsers() {
