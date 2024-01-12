@@ -207,13 +207,14 @@ public class Main extends Thread {
             }
 
             if (((Message)msg).type.equals("Rooms")) {
+                String[] response = msg.toStringArray();
+                roomList.setListData(response);
+
+            }
+            
+            if (((Message)msg).type.equals("Users")) {
                 String response = msg.toString();
-                String[] rooms;
-                rooms = response.split("\n");
-
-                System.out.println("response: " + response); //debug
-                roomList.setListData(rooms);
-
+                userList.setText(response);
             }
             
             String fileEnding = getFormat(((Message)msg).type);
@@ -230,12 +231,12 @@ public class Main extends Thread {
     }
 
     public void exit(String msg) {
-                    send(msg);
-                    try {
-                    socket.close();
-                    } catch (IOException e) {
-                        System.out.println("IOException occurred while trying to close socket" + e + e.getStackTrace());
-                    }
+        send(msg);
+        try {
+        socket.close();
+        } catch (IOException e) {
+            System.out.println("IOException occurred while trying to close socket" + e + e.getStackTrace());
+        }
     }
 
     private void showImage(Message img, String fileEnding) {
