@@ -41,6 +41,7 @@ public class RunServer {
                     sT.setChat(chat);
                     sT.setOnlineStatus(false);
                     sT.setRoomList(rooms);
+                    sT.setBanStatus(sT.getBanStatus());
                 }
             } else {
                 this.clients = new ArrayList<ServerThread>();
@@ -104,7 +105,17 @@ public class RunServer {
         sendRoomList();
     }
 
-    public String getRoomList() {
+    public void renameRoom(String oldRoomName, String newRoomName) {
+        for (Room room : rooms) {
+            if (room.getName().equals(oldRoomName)) {
+                room.setName(newRoomName);
+                sendRoomList();
+                break; // Stop searching once the room is found and renamed
+            }
+        }
+    }
+
+    public String[] getRoomList() {
         return msg.generateRoomList(rooms);
     }
 
@@ -134,7 +145,7 @@ public class RunServer {
         if (clients == null) {
             return "";
         }
-        return msg.gernerateUserListWithRoom(clients);
+        return msg.generateUserListWithRoom(clients);
     }
 
     public ArrayList<ServerThread> getClients() {

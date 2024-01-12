@@ -49,10 +49,6 @@ public class Room {
         return users.size();
     }
 
-    public void rename(String name) {
-        this.name = name;
-    }
-
     @Override 
     public boolean equals(Object o) {
         if (o instanceof Room && ((Room)o).getName().equals(this.name)) {

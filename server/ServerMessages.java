@@ -27,7 +27,7 @@ public class ServerMessages extends Thread {
         return false;
     }
 
-    public boolean sentToClient(String usernName, Object msg) {
+    public boolean sendToClient(String usernName, Object msg) {
         ServerThread client = null; 
         for (ServerThread cl: clients) {
             if (cl.userName.equals(usernName)) {
@@ -118,7 +118,7 @@ public class ServerMessages extends Thread {
         return users.toString();    
     }
 
-    public String gernerateUserListWithRoom(ArrayList<ServerThread> clients) {
+    public String generateUserListWithRoom(ArrayList<ServerThread> clients) {
         if (clients == null) {
             return "";
         }
@@ -148,15 +148,19 @@ public class ServerMessages extends Thread {
         return users.toString();
     }
 
-    public String generateRoomList(ArrayList<Room> rooms) {
+    public String[] generateRoomList(ArrayList<Room> rooms) {
        
-        StringBuilder roomList = new StringBuilder();
+        StringBuilder roomString = new StringBuilder();
+        String[] roomList;
         
         for (Room room: rooms) {
-            roomList.append(room.getName() + " (" + room.size() + " User)\n");
-        }
+            roomString.append(room.getName() + " (" + room.size() + " User)\n");
+        }   
 
-        return roomList.toString();
+        roomList = roomString.toString().split("\n");
+
+
+        return roomList;
     }
 
     public void setClientList(ArrayList<ServerThread> clinets) {

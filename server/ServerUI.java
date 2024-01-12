@@ -9,7 +9,7 @@ import java.util.Arrays;
 public class ServerUI extends JFrame {
     private JTextArea chatArea;
     private JTextArea userList;
-    private JTextArea roomList;
+    private JList<String> roomList;
     private JTextField inputField;
 
     public ServerUI() {
@@ -32,9 +32,9 @@ public class ServerUI extends JFrame {
         userList.setEditable(false);
         userList.setBackground(getForeground());
         
-        roomList = new JTextArea();
-        roomList.setEditable(false);
-        roomList.setBackground(getForeground());
+        String[] rooms = {};
+        roomList = new JList<>(rooms);
+        roomList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 
         inputField = new JTextField();
     }
@@ -73,7 +73,7 @@ public class ServerUI extends JFrame {
     
         JPanel chatroomPanel = new JPanel(new BorderLayout());
         chatroomPanel.add(new JLabel("Chatrooms"), BorderLayout.NORTH);
-        JTextArea chatroomTextArea = new JTextArea();
+        JList<String> chatroomList = new JList<String>();
         JTextField newChatroomField = new JTextField();
         JButton createChatroomButton = new JButton("Create Chatroom");
         JButton deleteChatroomButton = new JButton("Delete Chatroom");
@@ -85,6 +85,14 @@ public class ServerUI extends JFrame {
         chatroomButtonsPanel.add(deleteChatroomButton);
         chatroomInputFieldsPanel.add(newChatroomField);
         chatroomInputFieldsPanel.add(chatroomButtonsPanel);
+        roomList.addListSelectionListener(e -> {
+            String selectedChatRoom = roomList.getSelectedValue();
+            if (selectedChatRoom == "null") {
+                createChatroomButton.setText("Create Chatroom");
+            } else {
+                createChatroomButton.setText("Edit Chatroom");
+            }
+        });
 
         chatroomPanel.add(new JScrollPane(roomList), BorderLayout.CENTER);
         chatroomPanel.add(chatroomInputFieldsPanel, BorderLayout.SOUTH);
@@ -168,19 +176,46 @@ public class ServerUI extends JFrame {
         ActionListener createRoom = new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                String roomName = newChatroomField.getText();
-                if (!roomName.equals("") && !server.isRoom(roomName)) {
-                    Room room = new Room(roomName);
-                    server.addRoom(room);   
-                } // else { implement error warning }
+                if (createChatroomButton.getText() ==  "Create Chatroom") {
+                    String roomName = newChatroomField.getText();
+                    if (!roomName.equals("") && !server.isRoom(roomName)) {
+                        Room room = new Room(roomName);
+                        server.addRoom(room);   
+                    } // else { implement error warning }
+                } else {
+                    String selectedChatRoom = roomList.getSelectedValue();
+                    ArrayList<String> breakDownRoomName = new ArrayList<String>(Arrays.asList(selectedChatRoom.split(" "))); 
+                    breakDownRoomName.remove(breakDownRoomName.size() - 1);
+                    breakDownRoomName.remove(breakDownRoomName.size() - 1);
+                    selectedChatRoom = "";
+                    for (String s: breakDownRoomName) {
+                        selectedChatRoom += s;
+                    }
+                    final String roomName = selectedChatRoom;  
+                    server.renameRoom(roomName, newChatroomField.getText());
+                    roomList.setListData(server.getRoomList());
+                    createChatroomButton.setText("Create Chatroom");
+
+                }
+                
             }
         };
 
         ActionListener deleteRoom = new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                server.deleteRoom(newChatroomField.getText());
-                chatroomTextArea.setText(server.getRoomList());
+                String selectedChatRoom = roomList.getSelectedValue();
+                ArrayList<String> breakDownRoomName = new ArrayList<String>(Arrays.asList(selectedChatRoom.split(" "))); 
+                breakDownRoomName.remove(breakDownRoomName.size() - 1);
+                breakDownRoomName.remove(breakDownRoomName.size() - 1);
+                selectedChatRoom = "";
+                for (String s: breakDownRoomName) {
+                    selectedChatRoom += s;
+                }
+                final String roomName = selectedChatRoom;  
+                server.deleteRoom(roomName);
+                roomList.setListData(server.getRoomList());
+                createChatroomButton.setText("Create Chatroom");
             }
         };
 
@@ -197,11 +232,26 @@ public class ServerUI extends JFrame {
                 }
             }
         };
+
+        ActionListener showBanUserWindow = new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                if (serverStateLabel.getText().equals("Server State: On")) {
+                    ServerThread user = server.getClient(userField.getText());
+                    if (user == null) {
+                        userModerationTextArea.setText(userModerationTextArea.getText() + "User not found\n");
+                        return;
+                    }
+                    banUser(server, user, userModerationTextArea);    
+                }
+            }
+        };
     
         toggleServerButton.addActionListener(toggleServerButtonOnClick);
         createChatroomButton.addActionListener(createRoom);
         deleteChatroomButton.addActionListener(deleteRoom);
         warnButton.addActionListener(showWarnUserWindow);
+        banButton.addActionListener(showBanUserWindow);
     }
 
     private void warnUser(RunServer server, ServerThread user, JTextArea userModeration) {
@@ -229,6 +279,53 @@ public class ServerUI extends JFrame {
         warnFrame.add(warnPanel);
         warnFrame.setVisible(true);
     }
+
+    private void banUser(RunServer server, ServerThread user, JTextArea userModeration) {
+        JFrame banFrame = new JFrame("ban: " + user.userName);
+        banFrame.setSize(400, 100);
+        banFrame.setLocationRelativeTo(null);
+        JPanel banPanel= new JPanel(new GridLayout(2, 1));
+        JPanel dialogPanel = new JPanel(new BorderLayout());
+        JLabel messageLabel = new JLabel("Message");
+        JTextArea message = new JTextArea();
+        dialogPanel.add(messageLabel, BorderLayout.WEST);
+        dialogPanel.add(message, BorderLayout.CENTER);
+        JButton askBtn = new JButton();
+        if (user.getBanStatus() == false) {
+            askBtn = new JButton("ban user");
+            askBtn.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                server.sendToUser(user, "[VERBANNUNG]: " + message.getText());
+                    userModeration.setText(user.userName + "[BANNED]: " + message.getText());
+                    banFrame.dispose();
+                    user.setBanStatus(true);
+                    ServerMessages msg = new ServerMessages(user.threadList);
+                    server.sendToUser(user, "exit");
+                    user.logout(msg);
+                    
+                    
+            }
+        });
+        } else {
+            askBtn = new JButton("pardon ban");
+            askBtn.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                server.sendToUser(user, "[ENTBANNUNG]: " + message.getText());
+                    userModeration.setText(user.userName + "[PARDON]: " + message.getText());
+                    banFrame.dispose();
+                    user.setBanStatus(false);
+            }
+        });
+        }
+        
+        banPanel.add(dialogPanel);
+        banPanel.add(askBtn);
+
+        banFrame.add(banPanel);
+        banFrame.setVisible(true);
+    }
     
     private void updateRoomList(RunServer server) {
         Thread roomListThread = new Thread() {
@@ -238,7 +335,9 @@ public class ServerUI extends JFrame {
                     SwingUtilities.invokeLater( new Runnable() {
                         @Override
                         public void run() {
-                            roomList.setText(server.getRoomList());
+                            int selectedIndex = roomList.getSelectedIndex();
+                            roomList.setListData(server.getRoomList());
+                            roomList.setSelectedIndex(selectedIndex);
                         }
                     });
                     try{

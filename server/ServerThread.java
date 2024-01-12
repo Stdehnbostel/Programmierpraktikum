@@ -8,12 +8,13 @@ import javax.swing.JTextArea;
 public class ServerThread extends Thread implements Serializable {
 
     public transient Socket client;
-    private transient ArrayList<ServerThread> threadList;
+    public transient ArrayList<ServerThread> threadList;
     private transient ArrayList<Room> roomList;
     public String userName;
     public String room;
     private String pwd;
     private boolean online;
+    private boolean banStatus;
     private transient JTextArea chat;
     private transient ObjectInputStream input;
     private transient ObjectOutputStream out;
@@ -37,6 +38,7 @@ public class ServerThread extends Thread implements Serializable {
         this.input = input;
         this.out = out;
         this.room = "";
+        this.banStatus = false;
     }
 
     @Override
@@ -59,7 +61,7 @@ public class ServerThread extends Thread implements Serializable {
                     online = false;
                     msg.sendToAllClients("* " + this.userName + " hat sich abgemeldet! *");
                     chat.append("* " + this.userName + " hat sich abgemeldet! *" + "\n");
-                    String userList = msg.generateUserList(threadList);
+                    String userList = msg.generateUserListWithRoom(threadList);
                     Message users = new Message("String", userList);
                     msg.sendToAllClients(users);
                     break;
@@ -78,13 +80,18 @@ public class ServerThread extends Thread implements Serializable {
                         for (Room room: roomList) {
                             if (room.getName().equals((String)incoming.msg)) {
                                 this.room = room.getName();
+                                ArrayList<ServerThread> userList = room.getUserList();
                                 for (ServerThread client: threadList) {
                                     if (client.userName.equals(this.userName)) {
                                         room.addUser(client);
                                         msg.sendToAllClients(new Message("Rooms", msg.generateRoomList(roomList)));
                                         System.out.println("Add user to room");
+                                        msg.sendToAllClients(new Message("Users", msg.generateUserListWithRoom(threadList)));
                                     }
+
                                 }
+                                
+
                             }
                         } 
                     } else if (incoming.type.equals("Room") && ((String)incoming.msg).equals("")) {
@@ -95,6 +102,9 @@ public class ServerThread extends Thread implements Serializable {
                         msg.sendToRoom(room, roomList, in);
                     } else {
                         msg.sendToAllClients(in);
+                    }
+                    if (incoming.type.equals("Room")) {
+                        msg.sendToAllClients(new Message("Users", msg.generateUserListWithRoom(threadList)));
                     }
                 }
             }
@@ -150,6 +160,14 @@ public class ServerThread extends Thread implements Serializable {
         return this.room;
     }
 
+    public boolean getBanStatus() {
+        return this.banStatus;
+    }
+
+    public void setBanStatus(boolean banStatus) {
+        this.banStatus = banStatus;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (o instanceof ServerThread) {
@@ -160,16 +178,19 @@ public class ServerThread extends Thread implements Serializable {
         return false;
     }
 
-    private void logout(ServerMessages msg) {
+    public void logout(ServerMessages msg) {
             if (!room.equals("")) {
                 msg.removeUserFromRoom(userName, room, roomList);
             }
             online = false;
-            String userList = msg.generateUserList(threadList);
+            String userList = msg.generateUserListWithRoom(threadList);
             Message users = new Message("String", userList);
             msg.sendToAllClients(users);
             msg.sendToAllClients("* " + this.userName + " hat sich abgemeldet! *");
             chat.append("* " + this.userName + " hat sich abgemeldet! *" + "\n");
             msg.sendToAllClients(new Message("Rooms", msg.generateRoomList(roomList)));
+            this.out = null;
     }
+
+
 }

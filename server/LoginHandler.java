@@ -64,7 +64,7 @@ public class LoginHandler extends Thread {
                 comThread.start();
                 newUser = "* " + userName + " hat sich registriert! *";
                 chat.append(newUser + "\n");
-                String userList = msg.generateUserList(clients);
+                String userList = msg.generateUserListWithRoom(clients);
                 Message users = new Message("String", userList);
                 System.out.println("send User List: \n");
                 System.out.println(users);
@@ -82,6 +82,11 @@ public class LoginHandler extends Thread {
                 }
                 if (comThread.getPwd().equals(pwd)) {
                     System.out.println("Passwort korrekt");
+                    if (comThread.getBanStatus() == true) {
+                        out.writeObject("User ist verbannt! Verbindung wird beendet.");
+                        out.flush();
+                        client.close();
+                    }
                     // Password is correct
                     clients.remove(comThread);
                     comThread = new ServerThread(client, clients, roomList, userName, pwd, chat, in, out);
@@ -90,7 +95,7 @@ public class LoginHandler extends Thread {
                     out.writeObject("Login erfolgreich!");
                     out.flush();
                     newUser = "* " + userName + " hat sich angemeldet! *";
-                    String userList = msg.generateUserList(clients);
+                    String userList = msg.generateUserListWithRoom(clients);
                     Message users = new Message("String", userList);
                     System.out.println("send User List: \n");
                     System.out.println(users);
@@ -108,7 +113,7 @@ public class LoginHandler extends Thread {
                 
             }
     
-            String userList = msg.generateUserList(clients);
+            String userList = msg.generateUserListWithRoom(clients);
             Message users = new Message("String", userList);
             System.out.println("send User List: \n");
             System.out.println(users);
