@@ -3,6 +3,8 @@ import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.net.Socket;
 import java.util.ArrayList;
+import java.util.HashMap;
+
 import javax.swing.JTextArea;
 
 public class ServerThread extends Thread implements Serializable {
@@ -10,6 +12,7 @@ public class ServerThread extends Thread implements Serializable {
     public transient Socket client;
     public transient ArrayList<ServerThread> threadList;
     private transient ArrayList<Room> roomList;
+    private transient ArrayList<Room> privateRoomList;
     public String userName;
     public String room;
     private String pwd;
@@ -18,6 +21,7 @@ public class ServerThread extends Thread implements Serializable {
     private transient JTextArea chat;
     private transient ObjectInputStream input;
     private transient ObjectOutputStream out;
+    private ServerMessages msg;
 
     public ServerThread(
         Socket socket, 
@@ -43,61 +47,49 @@ public class ServerThread extends Thread implements Serializable {
 
     @Override
     public void run() {
-        ServerMessages msg = new ServerMessages(threadList);
+        msg = new ServerMessages(threadList);
+        privateRoomList = new ArrayList<Room>();
         try {
             //Reading the input from Client
 
-            String outputString = "";
             //inifite loop for server
             while(true) {
 
                 Object in = input.readObject();
-
-                if (in instanceof String) {
-                    outputString = in.toString();
+                
+                if (!(in instanceof Message) && in instanceof String) {
+                    online = processString((String)in);
+                    if (!online) {
+                        break;
+                    }
                 }
-                //if user types exit command
-                if(outputString.equals("exit")) {
-                    online = false;
-                    msg.sendToAllClients("* " + this.userName + " hat sich abgemeldet! *");
-                    chat.append("* " + this.userName + " hat sich abgemeldet! *" + "\n");
-                    String userList = msg.generateUserListWithRoom(threadList);
-                    Message users = new Message("String", userList);
-                    msg.sendToAllClients(users);
-                    break;
-                } else if (!(in instanceof Message) && room.equals("")) {
-                    msg.sendToAllClients("[" + this.userName + "]: " + outputString);
-                    chat.append("[" + this.userName + "]: " + outputString + "\n");
-                } else if (!(in instanceof Message) && !room.equals("")) {
-                    msg.sendToRoom(room, roomList, "[Raum: " + room + "] [" + this.userName + "]: " + outputString);
-                    chat.append("[Raum: " + room + "] [" + this.userName + "]: " + outputString + "\n");
-                }
-                System.out.println("Server received " + outputString);
 
                 if (in instanceof Message) {
                     Message incoming = (Message)in;
                     if (incoming.type.equals("Room") && !((String)incoming.msg).equals("")) {
-                        for (Room room: roomList) {
-                            if (room.getName().equals((String)incoming.msg)) {
-                                this.room = room.getName();
-                                ArrayList<ServerThread> userList = room.getUserList();
-                                for (ServerThread client: threadList) {
-                                    if (client.userName.equals(this.userName)) {
-                                        room.addUser(client);
-                                        msg.sendToAllClients(new Message("Rooms", msg.generateRoomList(roomList)));
-                                        System.out.println("Add user to room");
-                                        msg.sendToAllClients(new Message("Users", msg.generateUserListWithRoom(threadList)));
-                                    }
-
-                                }
-                                
-
-                            }
-                        } 
+                        this.room = (String)incoming.msg;
+                        msg.addUserToRoom(userName, room, roomList);
+                        msg.sendToAllClients(new Message("Rooms", msg.generateRoomList(roomList)));
+                        System.out.println("Add user to room");
+                        msg.sendToAllClients(new Message("Users", msg.generateUserListWithRoom(threadList)));
                     } else if (incoming.type.equals("Room") && ((String)incoming.msg).equals("")) {
                         msg.removeUserFromRoom(userName, room, roomList);
                         msg.sendToAllClients(new Message("Rooms", msg.generateRoomList(roomList)));
                         this.room = "";
+                    } else if (incoming.type.equals("Private")) {
+                        if (incoming.msg instanceof String[]) {
+                            String[] privateMsg = (String[])incoming.msg;
+                            boolean roomFound = msg.sendToRoom(privateMsg[0], privateRoomList, incoming);
+                            if (!roomFound) {
+                                Room privateRoom = new Room(privateMsg[0]);
+                                privateRoomList.add(privateRoom);
+                                String users[] = privateMsg[0].split("\n");
+                                msg.addUserToRoom(users[0], privateRoom);
+                                msg.addUserToRoom(users[1], privateRoom);
+                                msg.sendToRoom(privateMsg[0], privateRoomList, incoming);
+                            }
+                        }
+
                     } else if (!this.room.equals("")) {
                         msg.sendToRoom(room, roomList, in);
                     } else {
@@ -112,8 +104,21 @@ public class ServerThread extends Thread implements Serializable {
 
         } catch (Exception e) {
             System.out.println("Error occured " + e + e.getStackTrace());
-            logout(msg);
+            online = logout();
         }
+    }
+
+    private boolean processString(String inputString) {
+        if(inputString.equals("exit")) {
+            return logout();
+        } else if (room.equals("")) {
+            msg.sendToAllClients("[" + this.userName + "]: " + inputString);
+            chat.append("[" + this.userName + "]: " + inputString + "\n");
+        } else {
+            msg.sendToRoom(room, roomList, "[Raum: " + room + "] [" + this.userName + "]: " + inputString);
+            chat.append("[Raum: " + room + "] [" + this.userName + "]: " + inputString + "\n");
+        }
+        return true;
     }
 
     public Socket getSocket() {
@@ -168,6 +173,10 @@ public class ServerThread extends Thread implements Serializable {
         this.banStatus = banStatus;
     }
 
+    public String getUserName() {
+        return this.userName;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (o instanceof ServerThread) {
@@ -178,19 +187,17 @@ public class ServerThread extends Thread implements Serializable {
         return false;
     }
 
-    public void logout(ServerMessages msg) {
-            if (!room.equals("")) {
-                msg.removeUserFromRoom(userName, room, roomList);
-            }
-            online = false;
-            String userList = msg.generateUserListWithRoom(threadList);
-            Message users = new Message("String", userList);
-            msg.sendToAllClients(users);
-            msg.sendToAllClients("* " + this.userName + " hat sich abgemeldet! *");
-            chat.append("* " + this.userName + " hat sich abgemeldet! *" + "\n");
-            msg.sendToAllClients(new Message("Rooms", msg.generateRoomList(roomList)));
-            this.out = null;
+    public boolean logout() {
+        if (!room.equals("")) {
+            msg.removeUserFromRoom(userName, room, roomList);
+        }
+        String userList = msg.generateUserListWithRoom(threadList);
+        Message users = new Message("String", userList);
+        msg.sendToAllClients(users);
+        msg.sendToAllClients("* " + this.userName + " hat sich abgemeldet! *");
+        chat.append("* " + this.userName + " hat sich abgemeldet! *" + "\n");
+        msg.sendToAllClients(new Message("Rooms", msg.generateRoomList(roomList)));
+        this.out = null;
+        return false;
     }
-
-
 }

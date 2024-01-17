@@ -34,7 +34,6 @@ public class ServerMessages extends Thread {
                 client = cl;
             }
         }
-
         if (client == null) {
             return false;
         }
@@ -53,15 +52,16 @@ public class ServerMessages extends Thread {
     }
 
     public void sendToAllClients(Object msg) {
-        System.out.println(clients != null);
-        System.out.println(clients.isEmpty());
+        if (clients == null) {
+            return;
+        }
         for(ServerThread sT: clients) {
             sendToClient(sT, msg);
         }
         System.out.println("send to all Clients... done");
     }
 
-    public void sendToRoom(String roomName, ArrayList<Room> rooms, Object msg) {
+    public boolean sendToRoom(String roomName, ArrayList<Room> rooms, Object msg) {
         Room room = null;
         for (Room r: rooms) {
             if (r.getName().equals(roomName)) {
@@ -70,14 +70,15 @@ public class ServerMessages extends Thread {
         }
         if (room == null) {
             System.out.println("Error: Room not found");
-            return;
+            return false;
         }
         for (ServerThread sT: room.getUserList()) {
             sendToClient(sT, msg);
         }
+        return true;
     }
 
-    public void removeUserFromRoom(String userName, String roomName, ArrayList<Room> rooms) {
+    public boolean removeUserFromRoom(String userName, String roomName, ArrayList<Room> rooms) {
         Room room = null;
         for (Iterator<Room> it = rooms.iterator(); it.hasNext();) {
             Room r = it.next();
@@ -87,10 +88,47 @@ public class ServerMessages extends Thread {
         }
         if (room == null) {
             System.out.println("Error: Room not found");
-            return;
+            return false;
         }
         room.removeUser(userName);
+        return true;
+    }
 
+    public boolean addUserToRoom(String userName, String roomName, ArrayList<Room> rooms) {
+        Room room = null;
+        for (Room r: rooms) {
+            if (r.getName().equals(roomName)) {
+                room = r;
+            }
+        }
+        if (room == null) {
+            System.out.println("Room not found");
+            return false;
+        }
+        ServerThread client = null;
+        for (ServerThread sT: clients) {
+            if (sT.getUserName().equals(userName)) {
+                client = sT;
+            }
+        }
+        if (client == null) {
+            System.out.println("User not found");
+            return false;
+        }
+        return room.addUser(client);
+    }
+
+    public boolean addUserToRoom(String userName, Room room) {
+        ServerThread client = null;
+        for (ServerThread sT: clients) {
+            if (sT.userName.equals(userName)) {
+                client = sT;
+            }
+        }
+        if (client == null) {
+            return false;
+        }
+        return room.addUser(client);
     }
 
     public String generateUserList(ArrayList<ServerThread> clients) {

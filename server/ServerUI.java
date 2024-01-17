@@ -269,8 +269,8 @@ public class ServerUI extends JFrame {
             @Override
             public void actionPerformed(ActionEvent e) {
                 server.sendToUser(user, "[VERWARNUNG]: " + message.getText());
-                    userModeration.setText(user.userName + "[WARNED]: " + message.getText());
-                    warnFrame.dispose();
+                userModeration.setText(user.userName + "[WARNED]: " + message.getText());
+                warnFrame.dispose();
             }
         });
         warnPanel.add(dialogPanel);
@@ -300,11 +300,8 @@ public class ServerUI extends JFrame {
                     userModeration.setText(user.userName + "[BANNED]: " + message.getText());
                     banFrame.dispose();
                     user.setBanStatus(true);
-                    ServerMessages msg = new ServerMessages(user.threadList);
                     server.sendToUser(user, "exit");
-                    user.logout(msg);
-                    
-                    
+                    user.logout();
             }
         });
         } else {

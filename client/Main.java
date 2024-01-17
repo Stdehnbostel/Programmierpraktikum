@@ -9,6 +9,7 @@ import java.net.Socket;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Base64;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -29,13 +30,16 @@ public class Main extends Thread {
     ObjectInputStream in;
     private LinkedList<BufferedImage> images;
     private LinkedList<byte[]> pdfs;
+    private String[] privateMessages;
 
     public Main(String serverName, 
                 LinkedList<BufferedImage> imgs,
-                LinkedList<byte[]> pdfs) {
+                LinkedList<byte[]> pdfs,
+                String[] pM) {
         this.serverName = serverName;
         this.images = imgs;
         this.pdfs = pdfs;
+        this.privateMessages = pM;
     }
 
     public ObjectInputStream login() {
@@ -72,7 +76,6 @@ public class Main extends Thread {
                 requestPwd.equals("Registriere dich mit deinem Passwort:")) {
                 out.writeObject(this.pwd);
                 out.flush();
-                System.out.println(requestPwd);
             }
 
             return input;
@@ -169,6 +172,10 @@ public class Main extends Thread {
         this.roomList = roomList;
     }
 
+    public String getUserName() {
+        return this.userName;
+    }
+
     private String getFormat(String filePath) {
         Pattern formatPng = Pattern.compile(".*.png");
         Pattern formatJpeg = Pattern.compile(".*.jpg");
@@ -201,33 +208,38 @@ public class Main extends Thread {
 
     public void decodeMessage(Message msg) {
 
-            if (((Message)msg).type.equals("String")) {
-                String response = msg.toString();
-                userList.setText(response);
-            }
+        if (((Message)msg).type.equals("String")) {
+            String response = msg.toString();
+            userList.setText(response);            
+        }
 
-            if (((Message)msg).type.equals("Rooms")) {
-                String[] response = msg.toStringArray();
-                roomList.setListData(response);
-
-            }
+        if (((Message)msg).type.equals("Rooms")) {
+            String[] response = msg.toStringArray();
+            roomList.setListData(response);
+        }
             
-            if (((Message)msg).type.equals("Users")) {
-                String response = msg.toString();
-                userList.setText(response);
-            }
+        if (((Message)msg).type.equals("Users")) {
+            String response = msg.toString();
+            userList.setText(response);
+        }
+
+        if (msg.type.equals("Private") && msg.msg instanceof String[]) {
+            String[] pM = (String[])msg.msg;
+            privateMessages[0] = pM[0];
+            privateMessages[1] = pM[1];
+        }
             
-            String fileEnding = getFormat(((Message)msg).type);
-            boolean isImage = !fileEnding.equals("") && !fileEnding.equals("pdf");
-            boolean isPdf = fileEnding.equals("pdf");
+        String fileEnding = getFormat(((Message)msg).type);
+        boolean isImage = !fileEnding.equals("") && !fileEnding.equals("pdf");
+        boolean isPdf = fileEnding.equals("pdf");
 
-            if (isImage) {
-                showImage(msg, fileEnding);
-            }
+        if (isImage) {
+            showImage(msg, fileEnding);
+        }
 
-            if (isPdf) {
-                showPdf(msg);
-            }
+        if (isPdf) {
+            showPdf(msg);
+        }
     }
 
     public void exit(String msg) {
@@ -240,25 +252,25 @@ public class Main extends Thread {
     }
 
     private void showImage(Message img, String fileEnding) {
-                String encodedImg = (String)img.msg;
-                String fileName = "temp." + fileEnding;
+        String encodedImg = (String)img.msg;
+        String fileName = "temp." + fileEnding;
 
-                System.out.println("received a BufferedImage");
-                try {
-                    File out = new File(fileName);
+        System.out.println("received a BufferedImage");
+        try {
+            File out = new File(fileName);
                     
-                    BufferedImage newImg = ImageIO.read(new ByteArrayInputStream(Base64.getDecoder().decode(encodedImg)));
-                    ImageIO.write(newImg, fileEnding, out);
-                    images.add(newImg);
-                } catch (IOException e) {
-                    System.out.println("IOExeption occured sending file");
-                }
+            BufferedImage newImg = ImageIO.read(new ByteArrayInputStream(Base64.getDecoder().decode(encodedImg)));
+            ImageIO.write(newImg, fileEnding, out);
+            images.add(newImg);
+        } catch (IOException e) {
+            System.out.println("IOExeption occured sending file");
+        }
     }
 
     private void showPdf(Message msg) {
-                String encodedPdf = (String)msg.msg;
-                System.out.println("received a BufferedImage");
-                byte[] pdf = Base64.getDecoder().decode(encodedPdf);
-                this.pdfs.add(pdf);
+        String encodedPdf = (String)msg.msg;
+        System.out.println("received a BufferedImage");
+        byte[] pdf = Base64.getDecoder().decode(encodedPdf);
+        this.pdfs.add(pdf);
     }
 }

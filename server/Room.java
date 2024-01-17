@@ -14,10 +14,11 @@ public class Room {
         this.name = name;
     }
 
-    public void addUser(ServerThread user) {
+    public boolean addUser(ServerThread user) {
         if (!users.contains(user)) {
-            this.users.add(user);
+            return this.users.add(user);
         }
+        return false;
     }
 
     public void removeUser(ServerThread user) {

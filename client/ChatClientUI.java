@@ -7,12 +7,15 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
+import java.net.SocketException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.List;
+import java.util.function.BiConsumer;
 
 public class ChatClientUI extends JFrame {
     private JTextArea chatArea;
@@ -25,6 +28,8 @@ public class ChatClientUI extends JFrame {
     private String chat;
     private LinkedList<BufferedImage> images;
     private LinkedList<byte[]> pdfs;
+    private HashMap<String, JTextArea> privateChats;
+    private String[] privateMessage;
     private JList<String> chatRoomList;
     private String currentRoom;
 
@@ -32,7 +37,9 @@ public class ChatClientUI extends JFrame {
         this.chat = "";
         this.images = new LinkedList<BufferedImage>();
         this.pdfs = new LinkedList<byte[]>();
-        this.socketConnection = new Main("localhost", this.images, this.pdfs);
+        this.privateChats = new HashMap<String, JTextArea>();
+        this.privateMessage = new String[2];
+        this.socketConnection = new Main("localhost", this.images, this.pdfs, this.privateMessage);
         
         setTitle("Chat Client");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -72,11 +79,9 @@ public class ChatClientUI extends JFrame {
                         e.printStackTrace();
                     }
                 }
-                
             }
         };
         waitForPdfs.start();
-
         setVisible(true);
     }
 
@@ -169,13 +174,15 @@ public class ChatClientUI extends JFrame {
         roomListPanel.add(scrollRooms, BorderLayout.CENTER);
         roomsAndUsers.add(roomListPanel, BorderLayout.SOUTH);
 
+        JPanel roomOptionsPanel = new JPanel(new BorderLayout());
+        JButton privateChatButton = new JButton("privater Raum");
         JButton chooseRoomButton = new JButton("Raum\n wählen");
         chooseRoomButton.addActionListener(e -> {
             if (chooseRoomButton.getText().equals("Raum verlassen")) {
                 socketConnection.sendMessage(new Message("Room", ""));
                 currentRoom = "";
                 SwingUtilities.invokeLater(new Runnable() {
-                 @Override
+                    @Override
                     public void run() {
                         chooseRoomButton.setText("Raum\n wählen");
                     }
@@ -193,14 +200,24 @@ public class ChatClientUI extends JFrame {
                 currentRoom = roomName;
                 socketConnection.sendMessage(new Message("Room", roomName));
                 SwingUtilities.invokeLater(new Runnable() {
-                 @Override
+                    @Override
                     public void run() {
                         chooseRoomButton.setText("Raum verlassen");
                     }
                 });
             }
         });
-        roomListPanel.add(chooseRoomButton, BorderLayout.SOUTH);
+        privateChatButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                if (userList.getText().length() > 8) {
+                    openPrivateChatDialog(getOnlineList());
+                }
+            }
+        });
+        roomOptionsPanel.add(privateChatButton, BorderLayout.SOUTH);
+        roomOptionsPanel.add(chooseRoomButton, BorderLayout.NORTH);
+        roomListPanel.add(roomOptionsPanel, BorderLayout.SOUTH);
 
         JSplitPane splitUsersAndRooms = new JSplitPane(JSplitPane.VERTICAL_SPLIT, userListPanel, roomListPanel);
         splitUsersAndRooms.setResizeWeight(0.6);
@@ -262,51 +279,6 @@ public class ChatClientUI extends JFrame {
         loginFrame.setVisible(true);
     }
 
-    /*private void openChooseRoomWindow(String roomList) {
-
-        ArrayList<String> rooms = new ArrayList<String>(Arrays.asList(roomList.split("\n")));
-        
-        JFrame chooseFrame = new JFrame("Raum wählen");
-        chooseFrame.setSize(400, 500);
-        
-        JPanel chooseRoomPanel = new JPanel(new BorderLayout());
-        chooseRoomPanel.add(new JLabel("Räume"), BorderLayout.NORTH);
-        JPanel roomListPanel = new JPanel(new BorderLayout());
-        JScrollPane scrollRooms = new JScrollPane();
-        JTextArea roomListArea = new JTextArea(roomList);
-        roomListArea.setEditable(false);
-        scrollRooms.setViewportView(roomListArea);
-        scrollRooms.setVerticalScrollBar(scrollRooms.createVerticalScrollBar());
-        roomListPanel.add(scrollRooms, BorderLayout.CENTER);
-        JTextArea roomName = new JTextArea();
-        roomListPanel.add(roomName, BorderLayout.SOUTH);
-        chooseRoomPanel.add(roomListPanel, BorderLayout.CENTER); 
-        JButton chooseRoomButton = new JButton("Raum\n wählen");
-
-        chooseRoomButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                String room = roomName.getText();
-                boolean found = false;
-                for (String r: rooms) {
-                    if (r.contains(room + " (")) {
-                        found = true;
-                    }
-                }
-                if (found) {
-                    System.out.println("Raum gefunden");
-                    socketConnection.sendMessage(new Message("Room", room));
-                } else if (room.equals("")) {
-                    socketConnection.sendMessage(new Message("Room", room));
-                    System.out.println("Verlasse Raum");
-                }
-            }
-        });
-        chooseRoomPanel.add(chooseRoomButton, BorderLayout.SOUTH);
-
-        chooseFrame.add(chooseRoomPanel);
-        chooseFrame.setVisible(true);
-    }*/
     private void askToShowPicture(BufferedImage img) {
         JFrame dialog = new JFrame();
         dialog.setSize(400, 100);
@@ -373,6 +345,7 @@ public class ChatClientUI extends JFrame {
         }
     }
     private void getChatInput(ObjectInputStream in) {
+        privateMessage[0] = "";
         while (!socketConnection.getSocket().isClosed()) {
             try {
                 Object msg = in.readObject();
@@ -389,6 +362,18 @@ public class ChatClientUI extends JFrame {
                 } else if (msg instanceof Message) {
                     socketConnection.decodeMessage((Message)msg);
                     adjustUserList(currentRoom);
+                    if (!privateMessage[0].equals("")) {
+                        if (privateChats.containsKey(privateMessage[0])) {
+                            JTextArea privateChat = privateChats.get(privateMessage[0]);
+                            privateChat.setText(privateChat.getText() + privateMessage[1] + "\n");
+                        } else {
+                            String chatPartners[] = privateMessage[0].split("\n");
+                            String chatPartner = chatPartners[0].equals(socketConnection.getUserName()) ? 
+                                chatPartners[1] : chatPartners[0];
+                            openPrivateChat(chatPartner);
+                        }
+                        privateMessage[0] = "";
+                    }
                 }
             } catch (ClassNotFoundException ce) {
                 System.out.println("" + ce + ce.getStackTrace());
@@ -421,6 +406,86 @@ public class ChatClientUI extends JFrame {
             userList.setText(filteredUsers.toString());
         }
          
+    }
+
+    private String[] getOnlineList() {
+        String text = userList.getText();
+        int offlineIndex = text.indexOf("Offline:");
+        String onlineSelection = (offlineIndex != -1) ? text.substring(8, offlineIndex) : text.substring(8, text.length());
+        String onlineList[] = onlineSelection.split("\n");
+        Pattern userPattern = Pattern.compile("\\[.*\\]");
+        for (int i = 0; i < onlineList.length; i++) {
+            Matcher matcher = userPattern.matcher(onlineList[i]);
+            if (matcher.find()) {
+                onlineList[i] = matcher.group();
+            }
+        }   
+        return onlineList;
+    }
+
+    private void openPrivateChatDialog(String [] userList) {
+        JFrame openPrivateChat = new JFrame("privaten Raum eröffnen");
+        JPanel dialogPanel = new JPanel(new BorderLayout());
+        JLabel userLabel = new JLabel("Verfügbare User");
+        JList<String> selectableUserList = new JList<>(userList);
+        selectableUserList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        JScrollPane scrollUser = new JScrollPane();
+        scrollUser.setViewportView(selectableUserList);
+        scrollUser.setVerticalScrollBar(scrollUser.createVerticalScrollBar());
+        JButton startChatButton = new JButton("Raum eröffnen");
+        startChatButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                String userName = selectableUserList.getSelectedValue();
+                if (userName != null && !userName.equals("[" + socketConnection.getUserName() + "]")) {
+                    userName = userName.substring(1, userName.length() - 1);
+                    openPrivateChat(userName);
+                    openPrivateChat.dispose();
+                }
+            }
+        });
+        dialogPanel.add(userLabel, BorderLayout.NORTH);
+        dialogPanel.add(scrollUser, BorderLayout.CENTER);
+        dialogPanel.add(startChatButton, BorderLayout.SOUTH);
+        openPrivateChat.add(dialogPanel);
+        openPrivateChat.setSize(500, 300);
+        openPrivateChat.setVisible(true);
+    }
+
+    private void openPrivateChat(String userName) {
+        JFrame privateChatFrame = new JFrame("privater Chat mit " + userName);
+        JPanel chatPanel = new JPanel(new BorderLayout());
+        JLabel chatLabel = new JLabel();
+        JTextArea privateChatArea = new JTextArea();
+        JScrollPane scrollPrivateChat = new JScrollPane();
+        scrollPrivateChat.setViewportView(privateChatArea);
+        scrollPrivateChat.setVerticalScrollBar(scrollPrivateChat.createVerticalScrollBar());
+        JTextField chatInput = new JTextField();
+        JButton sendButton = new JButton("senden");
+        JButton sendFileButton = new JButton("f");
+        JPanel sendButtons = new JPanel(new BorderLayout());
+        sendButtons.add(sendFileButton, BorderLayout.WEST);
+        sendButtons.add(sendButton, BorderLayout.EAST);
+        sendButtons.add(chatInput, BorderLayout.CENTER);
+        chatPanel.add(chatLabel, BorderLayout.NORTH);
+        chatPanel.add(scrollPrivateChat, BorderLayout.CENTER);
+        chatPanel.add(sendButtons, BorderLayout.SOUTH);
+        privateChatFrame.add(chatPanel);
+        privateChatFrame.setSize(500, 300);
+        privateChatFrame.setVisible(true);
+        String privateChatName = socketConnection.getUserName().compareTo(userName) > 1 ? 
+            socketConnection.getUserName() + "\n" + userName : userName + "\n" + socketConnection.getUserName();
+        privateChats.put(privateChatName, privateChatArea);
+        String msg[] = {privateChatName, ""};
+        socketConnection.sendMessage(new Message("Private", msg));
+        sendButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                String msg[] = {privateChatName, "[" + socketConnection.getUserName() + "]: " + chatInput.getText()};
+                socketConnection.sendMessage(new Message("Private", msg));
+                chatInput.setText("");
+            }
+        });
     }
     
     public static void main(String[] args) {
