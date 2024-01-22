@@ -8,6 +8,7 @@ import java.io.ObjectOutputStream;
 import java.net.Socket;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.Base64;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -17,6 +18,7 @@ import java.util.regex.Pattern;
 import javax.imageio.ImageIO;
 import javax.swing.JList;
 import javax.swing.JTextArea;
+import javax.swing.SwingUtilities;
 
 public class Main extends Thread {
 
@@ -206,16 +208,25 @@ public class Main extends Thread {
         return "";
     }
 
-    public void decodeMessage(Message msg) {
+    public void decodeMessage(Message msg, ArrayList<String> currentRoom) {
 
-        if (((Message)msg).type.equals("String")) {
-            String response = msg.toString();
-            userList.setText(response);            
+        if (msg.type.equals("Rooms")) {
+            String[] response = msg.toStringArray();
+            SwingUtilities.invokeLater(new Runnable() {
+                @Override public void run() {
+                    roomList.setListData(response);
+                }
+            });
         }
 
-        if (((Message)msg).type.equals("Rooms")) {
-            String[] response = msg.toStringArray();
-            roomList.setListData(response);
+        if (msg.type.equals("Room")) {
+            if (((String)msg.msg).equals("")) {
+
+                currentRoom.clear();
+            } else {
+                currentRoom.add((String)msg.msg);
+            }
+            sendMessage(msg);
         }
             
         if (((Message)msg).type.equals("Users")) {

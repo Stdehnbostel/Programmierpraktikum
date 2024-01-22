@@ -14,8 +14,6 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.List;
-import java.util.function.BiConsumer;
 
 public class ChatClientUI extends JFrame {
     private JTextArea chatArea;
@@ -23,6 +21,7 @@ public class ChatClientUI extends JFrame {
     private JTextField inputField;
     private JButton sendButton;
     private JButton fileButton;
+    private JButton chooseRoomButton;
     private Main socketConnection;
     private JFileChooser fileChooser;
     private String chat;
@@ -31,7 +30,7 @@ public class ChatClientUI extends JFrame {
     private HashMap<String, JTextArea> privateChats;
     private String[] privateMessage;
     private JList<String> chatRoomList;
-    private String currentRoom;
+    private ArrayList<String> currentRoom;
 
     public ChatClientUI() {
         this.chat = "";
@@ -40,10 +39,11 @@ public class ChatClientUI extends JFrame {
         this.privateChats = new HashMap<String, JTextArea>();
         this.privateMessage = new String[2];
         this.socketConnection = new Main("localhost", this.images, this.pdfs, this.privateMessage);
+        this.currentRoom = new ArrayList<String>();
         
         setTitle("Chat Client");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setSize(500, 400);
+        setSize(600, 400);
         setLocationRelativeTo(null);
 
         initComponents();
@@ -140,6 +140,8 @@ public class ChatClientUI extends JFrame {
                 socketConnection.sendPic(f.toString());
             }
         });
+
+        chooseRoomButton = new JButton("Raum wählen");
     }
 
     private void layoutComponents() {
@@ -176,15 +178,14 @@ public class ChatClientUI extends JFrame {
 
         JPanel roomOptionsPanel = new JPanel(new BorderLayout());
         JButton privateChatButton = new JButton("privater Raum");
-        JButton chooseRoomButton = new JButton("Raum\n wählen");
         chooseRoomButton.addActionListener(e -> {
             if (chooseRoomButton.getText().equals("Raum verlassen")) {
                 socketConnection.sendMessage(new Message("Room", ""));
-                currentRoom = "";
+                currentRoom.clear();
                 SwingUtilities.invokeLater(new Runnable() {
                     @Override
                     public void run() {
-                        chooseRoomButton.setText("Raum\n wählen");
+                        chooseRoomButton.setText("Raum wählen");
                     }
                 });
             } else if (chatRoomList.getSelectedValue() != null){
@@ -193,11 +194,15 @@ public class ChatClientUI extends JFrame {
                 breakDownRoomName.remove(breakDownRoomName.size() - 1);
                 breakDownRoomName.remove(breakDownRoomName.size() - 1);
                 selectedChatRoom = "";
-                for (String s: breakDownRoomName) {
-                    selectedChatRoom += s;
+                for (int i = 0; i < breakDownRoomName.size(); i++) {
+                    if (i > 0) {
+                        selectedChatRoom += " ";
+                    }
+                    selectedChatRoom += breakDownRoomName.get(i);
+                    System.out.println(selectedChatRoom);
                 }
                 final String roomName = selectedChatRoom;
-                currentRoom = roomName;
+                currentRoom.add(roomName);
                 socketConnection.sendMessage(new Message("Room", roomName));
                 SwingUtilities.invokeLater(new Runnable() {
                     @Override
@@ -231,13 +236,6 @@ public class ChatClientUI extends JFrame {
         JButton loginButton = new JButton("Anmelden/Registrieren");
         loginButton.addActionListener(e -> openLoginWindow());
         add(loginButton, BorderLayout.NORTH);
-        initializeChatRoomList();
-    }
-
-    private void initializeChatRoomList() {
-
-
-
     }
 
     private void openLoginWindow() {
@@ -360,8 +358,13 @@ public class ChatClientUI extends JFrame {
                         }
                     });
                 } else if (msg instanceof Message) {
-                    socketConnection.decodeMessage((Message)msg);
-                    adjustUserList(currentRoom);
+                    socketConnection.decodeMessage((Message)msg, currentRoom);
+                    if (currentRoom.isEmpty()) {
+                        adjustUserList("");
+                        chooseRoomButton.setText("Raum wählen");
+                    } else {
+                        adjustUserList(currentRoom.get(0));
+                    }
                     if (!privateMessage[0].equals("")) {
                         if (privateChats.containsKey(privateMessage[0])) {
                             JTextArea privateChat = privateChats.get(privateMessage[0]);
@@ -484,6 +487,20 @@ public class ChatClientUI extends JFrame {
                 String msg[] = {privateChatName, "[" + socketConnection.getUserName() + "]: " + chatInput.getText()};
                 socketConnection.sendMessage(new Message("Private", msg));
                 chatInput.setText("");
+            }
+        });
+        sendFileButton.addActionListener(e -> {
+            int returnVal = fileChooser.showOpenDialog(inputField);
+            System.out.println(returnVal);
+            File f = fileChooser.getSelectedFile();
+            inputField.setText(f.toString());
+            Pattern pdf = Pattern.compile(".*.pdf");
+            Matcher matcher = pdf.matcher(f.toString());
+            if (matcher.matches()) {
+                System.out.println("Send a pdf...");
+                socketConnection.sendPdf(f.toString());
+            } else {
+                socketConnection.sendPic(f.toString());
             }
         });
     }
