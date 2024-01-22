@@ -57,54 +57,24 @@ public class ServerThread extends Thread implements Serializable {
 
                 Object in = input.readObject();
                 
-                if (!(in instanceof Message) && in instanceof String) {
+                if (in instanceof String) {
                     online = processString((String)in);
                     if (!online) {
+                        String userList = msg.generateUserListWithRoom(threadList);
+                        msg.sendToAllClients(new Message("Users", userList));
+                        this.out = null;
                         break;
                     }
-                }
-
-                if (in instanceof Message) {
-                    Message incoming = (Message)in;
-                    if (incoming.type.equals("Room") && !((String)incoming.msg).equals("")) {
-                        this.room = (String)incoming.msg;
-                        msg.addUserToRoom(userName, room, roomList);
-                        msg.sendToAllClients(new Message("Rooms", msg.generateRoomList(roomList)));
-                        System.out.println("Add user to room");
-                        msg.sendToAllClients(new Message("Users", msg.generateUserListWithRoom(threadList)));
-                    } else if (incoming.type.equals("Room") && ((String)incoming.msg).equals("")) {
-                        msg.removeUserFromRoom(userName, room, roomList);
-                        msg.sendToAllClients(new Message("Rooms", msg.generateRoomList(roomList)));
-                        this.room = "";
-                    } else if (incoming.type.equals("Private")) {
-                        if (incoming.msg instanceof String[]) {
-                            String[] privateMsg = (String[])incoming.msg;
-                            boolean roomFound = msg.sendToRoom(privateMsg[0], privateRoomList, incoming);
-                            if (!roomFound) {
-                                Room privateRoom = new Room(privateMsg[0]);
-                                privateRoomList.add(privateRoom);
-                                String users[] = privateMsg[0].split("\n");
-                                msg.addUserToRoom(users[0], privateRoom);
-                                msg.addUserToRoom(users[1], privateRoom);
-                                msg.sendToRoom(privateMsg[0], privateRoomList, incoming);
-                            }
-                        }
-
-                    } else if (!this.room.equals("")) {
-                        msg.sendToRoom(room, roomList, in);
-                    } else {
-                        msg.sendToAllClients(in);
-                    }
-                    if (incoming.type.equals("Room")) {
-                        msg.sendToAllClients(new Message("Users", msg.generateUserListWithRoom(threadList)));
-                    }
+                } else if (in instanceof Message) {
+                    decodeMessage((Message)in);
                 }
             }
-
-
         } catch (Exception e) {
             System.out.println("Error occured " + e + e.getStackTrace());
             online = logout();
+            String userList = msg.generateUserListWithRoom(threadList);
+            msg.sendToAllClients(new Message("Users", userList));
+            this.out = null;
         }
     }
 
@@ -177,6 +147,54 @@ public class ServerThread extends Thread implements Serializable {
         return this.userName;
     }
 
+    private void decodeMessage(Message in) {
+        if (in.type.equals("Room") && !((String)in.msg).equals("")) {
+            joinRoom((String)in.msg);
+        } else if (in.type.equals("Room") && ((String)in.msg).equals("")) {
+            leaveRoom();
+        } else if (in.type.equals("Private")) {
+            if (in.msg instanceof String[]) {
+                String[] privateMsg = (String[])in.msg;
+                boolean roomFound = msg.sendToRoom(privateMsg[0], privateRoomList, in);
+                if (!roomFound) {
+                    Room privateRoom = new Room(privateMsg[0]);
+                    privateRoomList.add(privateRoom);
+                    String users[] = privateMsg[0].split("\n");
+                    msg.addUserToRoom(users[0], privateRoom);
+                    msg.addUserToRoom(users[1], privateRoom);
+                    msg.sendToRoom(privateMsg[0], privateRoomList, in);
+                }
+            }
+        } else if (!this.room.equals("")) {
+            msg.sendToRoom(room, roomList, in);
+        } else {
+            msg.sendToAllClients(in);
+        }
+        if (in.type.equals("Room")) {
+            msg.sendToAllClients(new Message("Users", msg.generateUserListWithRoom(threadList)));
+        }                
+    }
+
+    private boolean joinRoom(String roomName) {
+        this.room = roomName;
+        if (msg.addUserToRoom(userName, room, roomList)) {
+            msg.sendToAllClients(new Message("Rooms", msg.generateRoomList(roomList)));
+            System.out.println("Add user to room");
+            msg.sendToAllClients(new Message("Users", msg.generateUserListWithRoom(threadList)));
+            return true;
+        }
+        return false;
+    }
+
+    private boolean leaveRoom() {
+        if (msg.removeUserFromRoom(userName, room, roomList)) {
+            msg.sendToAllClients(new Message("Rooms", msg.generateRoomList(roomList)));
+            this.room = "";
+            return true;
+        }
+        return false;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (o instanceof ServerThread) {
@@ -191,13 +209,9 @@ public class ServerThread extends Thread implements Serializable {
         if (!room.equals("")) {
             msg.removeUserFromRoom(userName, room, roomList);
         }
-        String userList = msg.generateUserListWithRoom(threadList);
-        Message users = new Message("String", userList);
-        msg.sendToAllClients(users);
         msg.sendToAllClients("* " + this.userName + " hat sich abgemeldet! *");
         chat.append("* " + this.userName + " hat sich abgemeldet! *" + "\n");
         msg.sendToAllClients(new Message("Rooms", msg.generateRoomList(roomList)));
-        this.out = null;
         return false;
     }
 }

@@ -32,9 +32,6 @@ public class Room {
     }
 
     public void removeAllUsers() {
-        for (ServerThread user: users) {
-            user.setRoom("");
-        }
         users.clear();
     }
 

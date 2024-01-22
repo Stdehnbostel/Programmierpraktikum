@@ -10,7 +10,7 @@ import java.util.*;
 
 import javax.swing.JTextArea;
 
-public class RunServer {
+public class RunServer extends Thread {
 
     private ServerSocket server;
     private ServerMessages msg;
@@ -132,9 +132,15 @@ public class RunServer {
     public boolean deleteRoom(String name) {
         for (Room room: rooms) {
             if(room.getName().equals(name)) {
-                room.removeAllUsers();
+                msg.sendToRoom(name, rooms, new Message("Room", ""));
                 this.rooms.remove(room);
                 sendRoomList();
+                try {
+                    sleep(500);
+                } catch (InterruptedException e) {
+                    System.out.println("InterruptedExeption" + e + e.getStackTrace());
+                }
+                msg.sendToAllClients(new Message("String", getUserList()));
                 return true;
             }
         }
@@ -153,7 +159,6 @@ public class RunServer {
     }
 
     private void sendRoomList() {
-
         if (server != null && !server.isClosed()) {
         msg.sendToAllClients(new Message("Rooms", msg.generateRoomList(rooms)));
         }
