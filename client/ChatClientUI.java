@@ -27,7 +27,7 @@ public class ChatClientUI extends JFrame {
     private String chat;
     private LinkedList<BufferedImage> images;
     private LinkedList<byte[]> pdfs;
-    private HashMap<String, JTextArea> privateChats;
+    private HashMap<String, PrivateChat> privateChats;
     private String[] privateMessage;
     private JList<String> chatRoomList;
     private ArrayList<String> currentRoom;
@@ -36,7 +36,7 @@ public class ChatClientUI extends JFrame {
         this.chat = "";
         this.images = new LinkedList<BufferedImage>();
         this.pdfs = new LinkedList<byte[]>();
-        this.privateChats = new HashMap<String, JTextArea>();
+        this.privateChats = new HashMap<String, PrivateChat>();
         this.privateMessage = new String[2];
         this.socketConnection = new Main("localhost", this.images, this.pdfs, this.privateMessage);
         this.currentRoom = new ArrayList<String>();
@@ -367,13 +367,13 @@ public class ChatClientUI extends JFrame {
                     }
                     if (!privateMessage[0].equals("")) {
                         if (privateChats.containsKey(privateMessage[0])) {
-                            JTextArea privateChat = privateChats.get(privateMessage[0]);
+                            JTextArea privateChat = privateChats.get(privateMessage[0]).chat;
                             privateChat.setText(privateChat.getText() + privateMessage[1] + "\n");
                         } else {
                             String chatPartners[] = privateMessage[0].split("\n");
                             String chatPartner = chatPartners[0].equals(socketConnection.getUserName()) ? 
                                 chatPartners[1] : chatPartners[0];
-                            openPrivateChat(chatPartner);
+                            openConsentWindow(chatPartner, new PrivateChat(new JTextArea(), false));
                         }
                         privateMessage[0] = "";
                     }
@@ -442,7 +442,7 @@ public class ChatClientUI extends JFrame {
                 String userName = selectableUserList.getSelectedValue();
                 if (userName != null && !userName.equals("[" + socketConnection.getUserName() + "]")) {
                     userName = userName.substring(1, userName.length() - 1);
-                    openPrivateChat(userName);
+                    openPrivateChat(userName, new PrivateChat(new JTextArea(), true));
                     openPrivateChat.dispose();
                 }
             }
@@ -455,13 +455,12 @@ public class ChatClientUI extends JFrame {
         openPrivateChat.setVisible(true);
     }
 
-    private void openPrivateChat(String userName) {
+    private void openPrivateChat(String userName, PrivateChat privateChat) {
         JFrame privateChatFrame = new JFrame("privater Chat mit " + userName);
         JPanel chatPanel = new JPanel(new BorderLayout());
-        JLabel chatLabel = new JLabel();
-        JTextArea privateChatArea = new JTextArea();
+        JButton leaveChatButton = new JButton("privaten Chat verlassen");
         JScrollPane scrollPrivateChat = new JScrollPane();
-        scrollPrivateChat.setViewportView(privateChatArea);
+        scrollPrivateChat.setViewportView(privateChat.chat);
         scrollPrivateChat.setVerticalScrollBar(scrollPrivateChat.createVerticalScrollBar());
         JTextField chatInput = new JTextField();
         JButton sendButton = new JButton("senden");
@@ -470,15 +469,15 @@ public class ChatClientUI extends JFrame {
         sendButtons.add(sendFileButton, BorderLayout.WEST);
         sendButtons.add(sendButton, BorderLayout.EAST);
         sendButtons.add(chatInput, BorderLayout.CENTER);
-        chatPanel.add(chatLabel, BorderLayout.NORTH);
+        chatPanel.add(leaveChatButton, BorderLayout.NORTH);
         chatPanel.add(scrollPrivateChat, BorderLayout.CENTER);
         chatPanel.add(sendButtons, BorderLayout.SOUTH);
         privateChatFrame.add(chatPanel);
         privateChatFrame.setSize(500, 300);
-        privateChatFrame.setVisible(true);
+        privateChatFrame.setVisible(privateChat.show);
         String privateChatName = socketConnection.getUserName().compareTo(userName) > 1 ? 
             socketConnection.getUserName() + "\n" + userName : userName + "\n" + socketConnection.getUserName();
-        privateChats.put(privateChatName, privateChatArea);
+        privateChats.put(privateChatName, privateChat);
         String msg[] = {privateChatName, ""};
         socketConnection.sendMessage(new Message("Private", msg));
         sendButton.addActionListener(new ActionListener() {
@@ -503,8 +502,51 @@ public class ChatClientUI extends JFrame {
                 socketConnection.sendPic(f.toString());
             }
         });
+        leaveChatButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                String msg[] = {privateChatName, "~//leaveRoom"};
+                socketConnection.sendMessage(new Message("Private", msg));
+            }
+        });
     }
     
+    private boolean openConsentWindow(String userName, PrivateChat privateChat) {
+        JFrame consentFrame= new JFrame("Chatanfrage");
+        consentFrame.setSize(300, 200);
+        consentFrame.setLocationRelativeTo(null);
+
+        JPanel consentPanel = new JPanel(new GridLayout(2, 1));
+
+        JLabel consentLabel = new JLabel(userName + " möchte einen privaten Chat starten");
+        JPanel buttonPanel = new JPanel(new GridLayout(1, 2));
+        JButton consentButton = new JButton("Ja");
+        JButton denyConsentButton = new JButton("Nein");
+        buttonPanel.add(denyConsentButton);
+        buttonPanel.add(consentButton);
+
+        consentPanel.add(consentLabel);
+        consentPanel.add(buttonPanel);
+        consentButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                privateChat.show = true;
+                openPrivateChat(userName, privateChat); 
+                consentFrame.dispose();
+            }
+        });
+
+        denyConsentButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                privateChat.show = false;
+                consentFrame.dispose();
+            }
+        });
+        consentFrame.add(consentPanel);
+        consentFrame.setVisible(true);
+        return privateChat.show;
+    }
     public static void main(String[] args) {
         SwingUtilities.invokeLater(new Runnable() {
             @Override
