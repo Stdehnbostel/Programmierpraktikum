@@ -27,6 +27,7 @@ public class ServerThread extends Thread implements Serializable {
         Socket socket, 
         ArrayList<ServerThread> threads, 
         ArrayList<Room> roomList,
+        ArrayList<Room> privateRoomList,
         String name, 
         String pwd, 
         JTextArea chat, 
@@ -35,6 +36,7 @@ public class ServerThread extends Thread implements Serializable {
         this.client = socket;
         this.threadList = threads;
         this.roomList = roomList;
+        this.privateRoomList = privateRoomList;
         this.userName = name;
         this.pwd = pwd;
         this.online = true;
@@ -48,7 +50,6 @@ public class ServerThread extends Thread implements Serializable {
     @Override
     public void run() {
         msg = new ServerMessages(threadList);
-        privateRoomList = new ArrayList<Room>();
         try {
             //Reading the input from Client
 
@@ -155,6 +156,13 @@ public class ServerThread extends Thread implements Serializable {
         } else if (in.type.equals("Private")) {
             if (in.msg instanceof String[]) {
                 String[] privateMsg = (String[])in.msg;
+                if (privateMsg[1].equals("~//leaveRoom")) {
+                    msg.removeUserFromRoom(userName, privateMsg[0], privateRoomList);
+                    String leaveMsg[] = {privateMsg[0], userName + " hat den privaten Chat verlassen"};
+                    msg.sendToRoom(privateMsg[0], privateRoomList, new Message("Private", leaveMsg));
+                } else {
+                    System.out.println("priateMsg[1]: " + privateMsg[1]);
+                }
                 boolean roomFound = msg.sendToRoom(privateMsg[0], privateRoomList, in);
                 if (!roomFound) {
                     Room privateRoom = new Room(privateMsg[0]);

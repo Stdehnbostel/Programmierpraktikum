@@ -12,15 +12,18 @@ public class LoginHandler extends Thread {
     private ArrayList<ServerThread> clients;
     private JTextArea chat;
     private ArrayList<Room> roomList;
+    private ArrayList<Room> privateRooms;
 
     public LoginHandler(Socket client, 
                         ArrayList<ServerThread> clients, 
                         JTextArea chat,
-                        ArrayList<Room> roomList) {
+                        ArrayList<Room> roomList,
+                        ArrayList<Room> privateRooms) {
         this.client = client;
         this.clients = clients;
         this.chat = chat;
         this.roomList = roomList;
+        this.privateRooms = privateRooms;
     }
 
     public void run() {
@@ -59,7 +62,7 @@ public class LoginHandler extends Thread {
                 if (pw instanceof String) {
                     pwd = pw.toString();
                 }
-                comThread = new ServerThread(client, clients, roomList, userName, pwd, chat, in, out);
+                comThread = new ServerThread(client, clients, roomList, privateRooms, userName, pwd, chat, in, out);
                 clients.add(comThread);
                 comThread.start();
                 newUser = "* " + userName + " hat sich registriert! *";
@@ -89,7 +92,7 @@ public class LoginHandler extends Thread {
                     }
                     // Password is correct
                     clients.remove(comThread);
-                    comThread = new ServerThread(client, clients, roomList, userName, pwd, chat, in, out);
+                    comThread = new ServerThread(client, clients, roomList, privateRooms, userName, pwd, chat, in, out);
                     clients.add(comThread);
                     comThread.start();
                     out.writeObject("Login erfolgreich!");

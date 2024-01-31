@@ -17,10 +17,12 @@ public class RunServer extends Thread {
     private JTextArea chat;
     private ArrayList<ServerThread> clients;
     private ArrayList<Room> rooms;
+    private ArrayList<Room> privateRooms;
 
     RunServer(JTextArea chat) {
         this.chat = chat;
         this.rooms = new ArrayList<Room>();
+        this.privateRooms = new ArrayList<Room>();
         this.msg = new ServerMessages(this.clients);
     }
 
@@ -63,7 +65,7 @@ public class RunServer extends Thread {
                     break;
                 }
                 Socket client = server.accept();
-                LoginHandler newUser = new LoginHandler(client, clients, chat, rooms);
+                LoginHandler newUser = new LoginHandler(client, clients, chat, rooms, privateRooms);
                 newUser.start();
                 
             }
