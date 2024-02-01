@@ -154,24 +154,7 @@ public class ServerThread extends Thread implements Serializable {
         } else if (in.type.equals("Room") && ((String)in.msg).equals("")) {
             leaveRoom();
         } else if (in.type.equals("Private")) {
-            if (in.msg instanceof String[]) {
-                String[] privateMsg = (String[])in.msg;
-                if (privateMsg[1].equals("~//leaveRoom")) {
-                    String leaveMsg[] = {privateMsg[0], userName + " hat den privaten Chat verlassen"};
-                    msg.sendToRoom(privateMsg[0], privateRoomList, new Message("Private", leaveMsg));
-                } else {
-                    System.out.println("privateMsg[1]: " + privateMsg[1]);
-                }
-                boolean roomFound = msg.sendToRoom(privateMsg[0], privateRoomList, in);
-                if (!roomFound) {
-                    Room privateRoom = new Room(privateMsg[0]);
-                    privateRoomList.add(privateRoom);
-                    String users[] = privateMsg[0].split("\n");
-                    msg.addUserToRoom(users[0], privateRoom);
-                    msg.addUserToRoom(users[1], privateRoom);
-                    msg.sendToRoom(privateMsg[0], privateRoomList, in);
-                }
-            }
+            processPrivateMessage(in);
         } else if (!this.room.equals("")) {
             msg.sendToRoom(room, roomList, in);
         } else {
@@ -200,6 +183,29 @@ public class ServerThread extends Thread implements Serializable {
             return true;
         }
         return false;
+    }
+
+    private void processPrivateMessage(Message in) {
+
+        if (!(in.msg instanceof String[])) {
+        return;
+        }
+        String[] privateMsg = (String[])in.msg;
+        if (privateMsg[1].equals("~//leaveRoom")) {
+            String leaveMsg[] = {privateMsg[0], userName + " hat den privaten Chat verlassen"};
+            msg.sendToRoom(privateMsg[0], privateRoomList, new Message("Private", leaveMsg));
+        } else {
+            System.out.println("privateMsg[1]: " + privateMsg[1]);
+        }
+        boolean roomFound = msg.sendToRoom(privateMsg[0], privateRoomList, in);
+        if (!roomFound) {
+            Room privateRoom = new Room(privateMsg[0]);
+            privateRoomList.add(privateRoom);
+            String users[] = privateMsg[0].split("\n");
+            msg.addUserToRoom(users[0], privateRoom);
+            msg.addUserToRoom(users[1], privateRoom);
+            msg.sendToRoom(privateMsg[0], privateRoomList, in);
+        }
     }
 
     @Override
