@@ -367,13 +367,23 @@ public class ChatClientUI extends JFrame {
                     }
                     if (!privateMessage[0].equals("")) {
                         if (privateChats.containsKey(privateMessage[0])) {
-                            JTextArea privateChat = privateChats.get(privateMessage[0]).chat;
-                            privateChat.setText(privateChat.getText() + privateMessage[1] + "\n");
+                            PrivateChat privateChat = privateChats.get(privateMessage[0]);
+                            if (privateMessage[1].equals("~//leaveRoom")) {
+                                privateChat.show = false;
+                            }
+                            privateChat.chat.setText(privateChat.chat.getText() + privateMessage[1] + "\n");
+                            if ((!privateChat.show) && privateMessage[1].equals("")) {
+                                String chatPartners[] = privateMessage[0].split("\n");
+                                String chatPartner = chatPartners[0].equals(socketConnection.getUserName()) ? 
+                                    chatPartners[1] : chatPartners[0];
+                                openConsentWindow(chatPartner, privateMessage[0]);
+                            }
                         } else {
                             String chatPartners[] = privateMessage[0].split("\n");
                             String chatPartner = chatPartners[0].equals(socketConnection.getUserName()) ? 
                                 chatPartners[1] : chatPartners[0];
-                            openConsentWindow(chatPartner, new PrivateChat(new JTextArea(), false));
+                            privateChats.put(privateMessage[0], new PrivateChat(new JTextArea(), false));
+                            openConsentWindow(chatPartner, privateMessage[0]);
                         }
                         privateMessage[0] = "";
                     }
@@ -442,7 +452,9 @@ public class ChatClientUI extends JFrame {
                 String userName = selectableUserList.getSelectedValue();
                 if (userName != null && !userName.equals("[" + socketConnection.getUserName() + "]")) {
                     userName = userName.substring(1, userName.length() - 1);
-                    openPrivateChat(userName, new PrivateChat(new JTextArea(), true));
+                    String chatName = createPrivateChatName(socketConnection.getUserName(), userName); 
+                    privateChats.put(chatName, new PrivateChat(new JTextArea(), true));
+                    openPrivateChat(userName, chatName);
                     openPrivateChat.dispose();
                 }
             }
@@ -455,7 +467,8 @@ public class ChatClientUI extends JFrame {
         openPrivateChat.setVisible(true);
     }
 
-    private void openPrivateChat(String userName, PrivateChat privateChat) {
+    private void openPrivateChat(String userName, String privateChatName) {
+        PrivateChat privateChat = privateChats.get(privateChatName);
         JFrame privateChatFrame = new JFrame("privater Chat mit " + userName);
         JPanel chatPanel = new JPanel(new BorderLayout());
         JButton leaveChatButton = new JButton("privaten Chat verlassen");
@@ -475,9 +488,6 @@ public class ChatClientUI extends JFrame {
         privateChatFrame.add(chatPanel);
         privateChatFrame.setSize(500, 300);
         privateChatFrame.setVisible(privateChat.show);
-        String privateChatName = socketConnection.getUserName().compareTo(userName) > 1 ? 
-            socketConnection.getUserName() + "\n" + userName : userName + "\n" + socketConnection.getUserName();
-        privateChats.put(privateChatName, privateChat);
         String msg[] = {privateChatName, ""};
         socketConnection.sendMessage(new Message("Private", msg));
         sendButton.addActionListener(new ActionListener() {
@@ -507,11 +517,14 @@ public class ChatClientUI extends JFrame {
             public void actionPerformed(ActionEvent e) {
                 String msg[] = {privateChatName, "~//leaveRoom"};
                 socketConnection.sendMessage(new Message("Private", msg));
+                privateChat.show = false;
+                privateChatFrame.dispose();
             }
         });
     }
     
-    private boolean openConsentWindow(String userName, PrivateChat privateChat) {
+    private boolean openConsentWindow(String userName, String privateChatName) {
+        PrivateChat privateChat = privateChats.get(privateChatName);
         JFrame consentFrame= new JFrame("Chatanfrage");
         consentFrame.setSize(300, 200);
         consentFrame.setLocationRelativeTo(null);
@@ -531,7 +544,7 @@ public class ChatClientUI extends JFrame {
             @Override
             public void actionPerformed(ActionEvent e) {
                 privateChat.show = true;
-                openPrivateChat(userName, privateChat); 
+                openPrivateChat(userName, privateChatName); 
                 consentFrame.dispose();
             }
         });
@@ -547,6 +560,12 @@ public class ChatClientUI extends JFrame {
         consentFrame.setVisible(true);
         return privateChat.show;
     }
+
+    private String createPrivateChatName(String thisUser, String otherUser) {
+       return thisUser.compareTo(otherUser) > 1 ? 
+            thisUser + "\n" + otherUser : otherUser + "\n" + thisUser; 
+    }
+
     public static void main(String[] args) {
         SwingUtilities.invokeLater(new Runnable() {
             @Override

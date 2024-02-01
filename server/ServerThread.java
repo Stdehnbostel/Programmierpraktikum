@@ -157,11 +157,10 @@ public class ServerThread extends Thread implements Serializable {
             if (in.msg instanceof String[]) {
                 String[] privateMsg = (String[])in.msg;
                 if (privateMsg[1].equals("~//leaveRoom")) {
-                    msg.removeUserFromRoom(userName, privateMsg[0], privateRoomList);
                     String leaveMsg[] = {privateMsg[0], userName + " hat den privaten Chat verlassen"};
                     msg.sendToRoom(privateMsg[0], privateRoomList, new Message("Private", leaveMsg));
                 } else {
-                    System.out.println("priateMsg[1]: " + privateMsg[1]);
+                    System.out.println("privateMsg[1]: " + privateMsg[1]);
                 }
                 boolean roomFound = msg.sendToRoom(privateMsg[0], privateRoomList, in);
                 if (!roomFound) {
