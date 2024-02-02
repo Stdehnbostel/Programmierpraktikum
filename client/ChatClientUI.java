@@ -511,41 +511,52 @@ public class ChatClientUI extends JFrame {
     
     private boolean openConsentWindow(String userName, String privateChatName) {
         PrivateChat privateChat = privateChats.get(privateChatName);
-        JFrame consentFrame= new JFrame("Chatanfrage");
-        consentFrame.setSize(300, 200);
-        consentFrame.setLocationRelativeTo(null);
-
-        JPanel consentPanel = new JPanel(new GridLayout(2, 1));
-
-        JLabel consentLabel = new JLabel(userName + " möchte einen privaten Chat starten");
-        JPanel buttonPanel = new JPanel(new GridLayout(1, 2));
-        JButton consentButton = new JButton("Ja");
-        JButton denyConsentButton = new JButton("Nein");
-        buttonPanel.add(denyConsentButton);
-        buttonPanel.add(consentButton);
-
-        consentPanel.add(consentLabel);
-        consentPanel.add(buttonPanel);
-        consentButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                privateChat.show = true;
-                openPrivateChat(userName, privateChatName); 
-                consentFrame.dispose();
-            }
+    
+        SwingUtilities.invokeLater(() -> {
+            JFrame consentFrame = new JFrame("Chatanfrage");
+            consentFrame.setSize(300, 150);
+            consentFrame.setLocationRelativeTo(null);
+            consentFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+    
+            JPanel consentPanel = new JPanel(new BorderLayout());
+    
+            JLabel consentLabel = new JLabel("<html><center>" + userName + " möchte einen privaten Chat starten</center></html>");
+            consentLabel.setHorizontalAlignment(JLabel.CENTER);
+    
+            JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 20, 10));
+            JButton consentButton = new JButton("Ja");
+            JButton denyConsentButton = new JButton("Nein");
+            buttonPanel.add(denyConsentButton);
+            buttonPanel.add(consentButton);
+    
+            consentPanel.add(consentLabel, BorderLayout.CENTER);
+            consentPanel.add(buttonPanel, BorderLayout.SOUTH);
+    
+            consentButton.addActionListener(new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    privateChat.show = true;
+                    openPrivateChat(userName, privateChatName);
+                    consentFrame.dispose();
+                }
+            });
+    
+            denyConsentButton.addActionListener(new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    privateChat.show = false;
+                    consentFrame.dispose();
+                }
+            });
+    
+            consentFrame.add(consentPanel);
+            consentFrame.setVisible(true);
         });
-
-        denyConsentButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                privateChat.show = false;
-                consentFrame.dispose();
-            }
-        });
-        consentFrame.add(consentPanel);
-        consentFrame.setVisible(true);
+    
         return privateChat.show;
     }
+    
+    
 
     private String createPrivateChatName(String thisUser, String otherUser) {
        return thisUser.compareTo(otherUser) > 1 ? 
