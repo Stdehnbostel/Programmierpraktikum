@@ -129,14 +129,38 @@ public class Main extends Thread {
                 System.out.println("IOException occurd in Main" + e);
             }
         }
+    }
+    
+    public void sendPic(Message msg) {
+        if (!(msg.msg instanceof String[])) {
+            return;
+        }
+
+        String privatePic = ((String[])msg.msg)[1];
+        File f = new File(privatePic);
+        BufferedImage bimg;
+        String format = getFormat(privatePic);
         
+        if (f.isFile()) {
+            try {
+                bimg = ImageIO.read(f);
+                ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                ImageIO.write(bimg, format, baos);
+                baos.close();
+                ((String[])msg.msg)[1] = (Base64.getEncoder().encodeToString(baos.toByteArray()));
+                out.writeObject(msg);
+                out.flush();
+            
+            } catch (IOException e) {
+                System.out.println("IOException occurd in Main" + e);
+            }
+        }
     }
 
     public void sendPdf(String msg) {
         File f = new File(msg);
         
         if (f.isFile()) {
-            System.out.println("Send: " + msg);
             try {
                 byte[] pdf = Files.readAllBytes(Paths.get(msg));
                 Message pic = new Message(msg, Base64.getEncoder().encodeToString(pdf));
@@ -147,7 +171,26 @@ public class Main extends Thread {
                 System.out.println("IOException occurd in Main" + e);
             }
         }
+    }
+    
+    public void sendPdf(Message msg) {
+        System.out.println("Privates Pdf");
+        if (!(msg.msg instanceof String[])) {
+            return;
+        }
+        File f = new File(((String[])msg.msg)[1]);
         
+        if (f.isFile()) {
+            try {
+                byte[] pdf = Files.readAllBytes(Paths.get(((String[])msg.msg)[1]));
+                ((String[])msg.msg)[1] = Base64.getEncoder().encodeToString(pdf);
+                out.writeObject(msg);
+                out.flush();
+            
+            } catch (IOException e) {
+                System.out.println("IOException occurd in Main" + e);
+            }
+        }
     }
 
     public ObjectInputStream getObjectInputStream() {

@@ -155,6 +155,14 @@ public class ServerThread extends Thread implements Serializable {
             leaveRoom();
         } else if (in.type.equals("Private")) {
             processPrivateMessage(in);
+        } else if (in.type.equals("PrivatePdf")) {
+            processPrivateMessage(in);
+        } else if (in.type.equals("PrivatePng")) {
+            processPrivateMessage(in);
+        } else if (in.type.equals("PrivateJpg")) {
+            processPrivateMessage(in);
+        } else if (in.type.equals("PrivateBmp")) {
+            processPrivateMessage(in);
         } else if (!this.room.equals("")) {
             msg.sendToRoom(room, roomList, in);
         } else {
@@ -191,7 +199,24 @@ public class ServerThread extends Thread implements Serializable {
         return;
         }
         String[] privateMsg = (String[])in.msg;
-        if (privateMsg[1].equals("~//leaveRoom")) {
+        String users[] = privateMsg[0].split("\n");
+        if (in.type.equals("PrivatePdf")) {
+            System.out.println("Priavtes Pdf empfangen");
+            String user = users[0].equals(userName) ? users[1] : users[0];
+            msg.sendToClient(user, new Message("private.pdf", privateMsg[1]));
+        } else if (in.type.equals("PrivatePng")) {
+            System.out.println("Priavtes Png empfangen");
+            String user = users[0].equals(userName) ? users[1] : users[0];
+            msg.sendToClient(user, new Message("private.png", privateMsg[1]));
+        } else if (in.type.equals("PrivateJpg")) {
+            System.out.println("Priavtes Jpg empfangen");
+            String user = users[0].equals(userName) ? users[1] : users[0];
+            msg.sendToClient(user, new Message("private.jpg", privateMsg[1]));
+        } else if (in.type.equals("PrivateBmp")) {
+            System.out.println("Priavtes Bmp empfangen");
+            String user = users[0].equals(userName) ? users[1] : users[0];
+            msg.sendToClient(user, new Message("private.bmp", privateMsg[1]));
+        } else if (privateMsg[1].equals("~//leaveRoom")) {
             String leaveMsg[] = {privateMsg[0], userName + " hat den privaten Chat verlassen"};
             msg.sendToRoom(privateMsg[0], privateRoomList, new Message("Private", leaveMsg));
         } else {
@@ -201,9 +226,12 @@ public class ServerThread extends Thread implements Serializable {
         if (!roomFound) {
             Room privateRoom = new Room(privateMsg[0]);
             privateRoomList.add(privateRoom);
-            String users[] = privateMsg[0].split("\n");
-            msg.addUserToRoom(users[0], privateRoom);
-            msg.addUserToRoom(users[1], privateRoom);
+            if (!msg.addUserToRoom(users[0], privateRoom) || !msg.addUserToRoom(users[1], privateRoom)) {
+                privateMsg[1] = "User ist Offline";
+                msg.sendToClient(userName, new Message("Private", privateMsg));
+                privateRoomList.remove(privateRoom);
+                System.out.println("User not found");
+            }
             msg.sendToRoom(privateMsg[0], privateRoomList, in);
         }
     }
@@ -225,6 +253,7 @@ public class ServerThread extends Thread implements Serializable {
         msg.sendToAllClients("* " + this.userName + " hat sich abgemeldet! *");
         chat.append("* " + this.userName + " hat sich abgemeldet! *" + "\n");
         msg.sendToAllClients(new Message("Rooms", msg.generateRoomList(roomList)));
+        privateRoomList.removeIf(room -> room.getName().contains(userName));
         return false;
     }
 }

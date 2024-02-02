@@ -114,6 +114,9 @@ public class ServerMessages extends Thread {
         if (client == null) {
             System.out.println("User not found");
             return false;
+        } else if (client.getOnlineStatus() == false) {
+            System.out.println("User Offline");
+            return false;
         }
         return room.addUser(client);
     }
@@ -126,6 +129,10 @@ public class ServerMessages extends Thread {
             }
         }
         if (client == null) {
+            System.out.println("User not found");
+            return false;
+        } else if (client.getOnlineStatus() == false) {
+            System.out.println("User Offline");
             return false;
         }
         return room.addUser(client);

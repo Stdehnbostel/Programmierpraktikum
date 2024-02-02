@@ -2,6 +2,9 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
+import java.awt.event.WindowListener;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.FileOutputStream;
@@ -455,6 +458,7 @@ public class ChatClientUI extends JFrame {
 
     private void openPrivateChat(String userName, String privateChatName) {
         PrivateChat privateChat = privateChats.get(privateChatName);
+        privateChat.open = true;
         JFrame privateChatFrame = new JFrame("privater Chat mit " + userName);
         JPanel chatPanel = new JPanel(new BorderLayout());
         JButton leaveChatButton = new JButton("privaten Chat verlassen");
@@ -490,10 +494,29 @@ public class ChatClientUI extends JFrame {
             File f = fileChooser.getSelectedFile();
             inputField.setText(f.toString());
             Pattern pdf = Pattern.compile(".*.pdf");
-            Matcher matcher = pdf.matcher(f.toString());
-            if (matcher.matches()) {
-                System.out.println("Send a pdf...");
-                socketConnection.sendPdf(f.toString());
+            Pattern png = Pattern.compile(".*.png");
+            Pattern jpg = Pattern.compile(".*.jpg");
+            Pattern bmp = Pattern.compile(".*.bmp");
+            Matcher matcherPdf = pdf.matcher(f.toString());
+            Matcher matcherPng = png.matcher(f.toString());
+            Matcher matcherJpg = jpg.matcher(f.toString());
+            Matcher matcherBmp = bmp.matcher(f.toString());
+            if (matcherPdf.matches()) {
+                System.out.println("Send a pdf...");    
+                String message[] = {privateChatName, f.toString()};
+                socketConnection.sendPdf(new Message("PrivatePdf", message));
+            } else if (matcherPng.matches()) {
+                System.out.println("Send a png...");    
+                String message[] = {privateChatName, f.toString()};
+                socketConnection.sendPdf(new Message("PrivatePng", message));
+            } else if (matcherJpg.matches()) {
+                System.out.println("Send a pdf...");    
+                String message[] = {privateChatName, f.toString()};
+                socketConnection.sendPdf(new Message("PrivateJpg", message));
+            } else if (matcherBmp.matches()) {
+                System.out.println("Send a pdf...");    
+                String message[] = {privateChatName, f.toString()};
+                socketConnection.sendPdf(new Message("PrivateBmp", message));
             } else {
                 socketConnection.sendPic(f.toString());
             }
@@ -505,6 +528,19 @@ public class ChatClientUI extends JFrame {
                 socketConnection.sendMessage(new Message("Private", msg));
                 privateChat.show = false;
                 privateChatFrame.dispose();
+            }
+        });
+        privateChatFrame.addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowClosed(WindowEvent e) {
+                privateChat.open = false;
+                System.out.println("privateChat.open: " + privateChat.open);
+            }
+            
+            @Override
+            public void windowClosing(WindowEvent e) {
+                privateChat.open = false;
+                System.out.println("privateChat.open: " + privateChat.open);
             }
         });
     }
@@ -545,6 +581,8 @@ public class ChatClientUI extends JFrame {
                 @Override
                 public void actionPerformed(ActionEvent e) {
                     privateChat.show = false;
+                    String msg[] = {privateChatName, socketConnection.getUserName() + " hat die Anfrage abgelehnt"};
+                    socketConnection.sendMessage(new Message("Private", msg));
                     consentFrame.dispose();
                 }
             });
@@ -573,6 +611,10 @@ public class ChatClientUI extends JFrame {
             } else if (!privateChat.show) {
                 String chatPartner = getChatPartnerName(); 
                 openConsentWindow(chatPartner, privateMessage[0]);
+            }
+            if (privateChat.show && !privateChat.open) {
+                String chatPartner = getChatPartnerName(); 
+                openPrivateChat(chatPartner, privateMessage[0]);
             }
         } else {
             String chatPartner = getChatPartnerName(); 
