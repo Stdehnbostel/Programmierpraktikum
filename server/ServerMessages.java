@@ -37,18 +37,7 @@ public class ServerMessages extends Thread {
         if (client == null) {
             return false;
         }
-
-        if(client.getOnlineStatus() == true) {
-            try {
-                ObjectOutputStream out = client.getObjectOutputStream();
-                out.writeObject(msg);
-                out.flush();
-            } catch (IOException e) {
-                System.out.println("IOExeption occurred in sendServerMessage()" + e);
-            }
-            return true;
-        }
-        return false;
+        return sendToClient(client, msg);
     }
 
     public void sendToAllClients(Object msg) {
@@ -105,20 +94,7 @@ public class ServerMessages extends Thread {
             System.out.println("Room not found");
             return false;
         }
-        ServerThread client = null;
-        for (ServerThread sT: clients) {
-            if (sT.getUserName().equals(userName)) {
-                client = sT;
-            }
-        }
-        if (client == null) {
-            System.out.println("User not found");
-            return false;
-        } else if (client.getOnlineStatus() == false) {
-            System.out.println("User Offline");
-            return false;
-        }
-        return room.addUser(client);
+        return addUserToRoom(userName, room);
     }
 
     public boolean addUserToRoom(String userName, Room room) {

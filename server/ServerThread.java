@@ -166,6 +166,7 @@ public class ServerThread extends Thread implements Serializable {
         } else if (!this.room.equals("")) {
             msg.sendToRoom(room, roomList, in);
         } else {
+            chat.append("[" + userName + "] hat eine Datei versendet\n");
             msg.sendToAllClients(in);
         }
         if (in.type.equals("Room")) {
@@ -178,6 +179,7 @@ public class ServerThread extends Thread implements Serializable {
         if (msg.addUserToRoom(userName, room, roomList)) {
             msg.sendToAllClients(new Message("Rooms", msg.generateRoomList(roomList)));
             System.out.println("Add user to room");
+            chat.append("[" + userName + "] ist in den " + roomName + " gewechselt\n");
             msg.sendToAllClients(new Message("Users", msg.generateUserListWithRoom(threadList)));
             return true;
         }
@@ -187,6 +189,7 @@ public class ServerThread extends Thread implements Serializable {
     private boolean leaveRoom() {
         if (msg.removeUserFromRoom(userName, room, roomList)) {
             msg.sendToAllClients(new Message("Rooms", msg.generateRoomList(roomList)));
+            chat.append("[" + userName + "] hat den " + room + " verlassen\n");
             this.room = "";
             return true;
         }
