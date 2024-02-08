@@ -32,15 +32,18 @@ public class Main extends Thread {
     ObjectInputStream in;
     private LinkedList<BufferedImage> images;
     private LinkedList<byte[]> pdfs;
+    private LinkedList<byte[]> sounds;
     private String[] privateMessages;
 
     public Main(String serverName, 
                 LinkedList<BufferedImage> imgs,
                 LinkedList<byte[]> pdfs,
+                LinkedList<byte[]> sounds,
                 String[] pM) {
         this.serverName = serverName;
         this.images = imgs;
         this.pdfs = pdfs;
+        this.sounds= sounds;
         this.privateMessages = pM;
     }
 
@@ -157,7 +160,7 @@ public class Main extends Thread {
         }
     }
 
-    public void sendPdf(String msg) {
+    public void sendFile(String msg) {
         File f = new File(msg);
         
         if (f.isFile()) {
@@ -227,6 +230,7 @@ public class Main extends Thread {
         Pattern formatBmp = Pattern.compile(".*.bmp");
         Pattern formatGif = Pattern.compile(".*.gif");
         Pattern formatPdf = Pattern.compile(".*.pdf");
+        Pattern formatWav = Pattern.compile(".*.wav");
 
         Matcher matcher = formatPng.matcher(filePath);
         if (matcher.matches()) {
@@ -247,6 +251,10 @@ public class Main extends Thread {
         matcher = formatPdf.matcher(filePath);
         if (matcher.matches()) {
             return "pdf";
+        }   
+        matcher = formatWav.matcher(filePath);
+        if (matcher.matches()) {
+            return "wav";
         }
         return "";
     }
@@ -284,15 +292,16 @@ public class Main extends Thread {
         }
             
         String fileEnding = getFormat(((Message)msg).type);
-        boolean isImage = !fileEnding.equals("") && !fileEnding.equals("pdf");
+        boolean isImage = !fileEnding.equals("") && !fileEnding.equals("pdf") && !fileEnding.equals("wav");
         boolean isPdf = fileEnding.equals("pdf");
+        boolean isWav = fileEnding.equals("wav");
 
         if (isImage) {
             showImage(msg, fileEnding);
-        }
-
-        if (isPdf) {
+        } else if (isPdf) {
             showPdf(msg);
+        } else if (isWav) {
+            playSound(msg);
         }
     }
 
@@ -323,8 +332,14 @@ public class Main extends Thread {
 
     private void showPdf(Message msg) {
         String encodedPdf = (String)msg.msg;
-        System.out.println("received a BufferedImage");
         byte[] pdf = Base64.getDecoder().decode(encodedPdf);
         this.pdfs.add(pdf);
+    }
+
+    private void playSound(Message msg) {
+        String encodedSound = (String)msg.msg;
+        System.out.println("received a sound file");
+        byte[] sound = Base64.getDecoder().decode(encodedSound);
+        this.sounds.add(sound);
     }
 }

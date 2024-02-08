@@ -1,16 +1,19 @@
+import javax.sound.sampled.AudioInputStream;
+import javax.sound.sampled.AudioSystem;
+import javax.sound.sampled.Clip;
+import javax.sound.sampled.LineUnavailableException;
+import javax.sound.sampled.UnsupportedAudioFileException;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
-import java.awt.event.WindowListener;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
-import java.net.SocketException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -30,6 +33,7 @@ public class ChatClientUI extends JFrame {
     private String chat;
     private LinkedList<BufferedImage> images;
     private LinkedList<byte[]> pdfs;
+    private LinkedList<byte[]> sounds;
     private HashMap<String, PrivateChat> privateChats;
     private String[] privateMessage;
     private JList<String> chatRoomList;
@@ -39,9 +43,14 @@ public class ChatClientUI extends JFrame {
         this.chat = "";
         this.images = new LinkedList<BufferedImage>();
         this.pdfs = new LinkedList<byte[]>();
+        this.sounds = new LinkedList<byte[]>();
         this.privateChats = new HashMap<String, PrivateChat>();
         this.privateMessage = new String[2];
-        this.socketConnection = new Main("localhost", this.images, this.pdfs, this.privateMessage);
+        this.socketConnection = new Main(   "localhost", 
+                                            this.images, 
+                                            this.pdfs, 
+                                            this.sounds, 
+                                            this.privateMessage);
         this.currentRoom = new ArrayList<String>();
         
         setTitle("Chat Client");
@@ -85,6 +94,23 @@ public class ChatClientUI extends JFrame {
             }
         };
         waitForPdfs.start();
+        
+        Thread waitForSounds = new Thread() {
+            @Override
+            public void run() {
+                while(true) {
+                    if(!sounds.isEmpty()) {
+                        askToPlaySound(sounds.pop());
+                    }
+                    try {
+                        sleep(50);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+        };
+        waitForSounds.start();
         setVisible(true);
     }
 
@@ -135,10 +161,12 @@ public class ChatClientUI extends JFrame {
             File f = fileChooser.getSelectedFile();
             inputField.setText(f.toString());
             Pattern pdf = Pattern.compile(".*.pdf");
-            Matcher matcher = pdf.matcher(f.toString());
-            if (matcher.matches()) {
+            Pattern wav = Pattern.compile(".*.wav");
+            Matcher matcherPdf = pdf.matcher(f.toString());
+            Matcher matcherWav = wav.matcher(f.toString());
+            if (matcherPdf.matches() || matcherWav.matches()) {
                 System.out.println("Send a pdf...");
-                socketConnection.sendPdf(f.toString());
+                socketConnection.sendFile(f.toString());
             } else {
                 socketConnection.sendPic(f.toString());
             }
@@ -345,6 +373,48 @@ public class ChatClientUI extends JFrame {
             System.out.println("IOExeption occured in Main" + e + e.getStackTrace());
         }
     }
+    
+    private void askToPlaySound(byte[] sound) {
+          
+        JFrame dialog = new JFrame();
+        dialog.setSize(400, 100);
+        dialog.setLocationRelativeTo(null);
+        JPanel askBtnPanel = new JPanel(new FlowLayout());
+        JLabel askForPermission = new JLabel("Eine Sound-Datei wurde empfangen. Soll sie abgespielt werden?");
+        JButton askBtn = new JButton("Sound abspielen?");
+        askBtn.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                playSound(sound);
+            }
+        });
+        askBtnPanel.add(askForPermission);
+        askBtnPanel.add(askBtn);
+
+        dialog.add(askBtnPanel);
+        dialog.setVisible(true);
+    }
+
+
+    private void playSound(byte[] sound) {
+        try { 
+            File f = new File("../temp.wav");
+            FileOutputStream fos = new FileOutputStream(f);
+            fos.write(sound);
+            fos.close();
+            AudioInputStream ais = AudioSystem.getAudioInputStream(f);
+            Clip clip = AudioSystem.getClip();
+            clip.open(ais);
+            clip.start();
+        } catch (IOException e) {
+            System.out.println("IOException occurred while trying to play sound " + e + e.getStackTrace());
+        } catch (LineUnavailableException lue) {
+            System.out.println("LineUnavailableException occurred while trying to play sound " + lue + lue.getStackTrace());
+        } catch (UnsupportedAudioFileException use) {
+            System.out.println("UnsupportedAudioException occurred while trying to play sound " + use + use.getStackTrace());
+        }
+    }
+
     private void getChatInput(ObjectInputStream in) {
         privateMessage[0] = "";
         while (!socketConnection.getSocket().isClosed()) {
@@ -502,19 +572,15 @@ public class ChatClientUI extends JFrame {
             Matcher matcherJpg = jpg.matcher(f.toString());
             Matcher matcherBmp = bmp.matcher(f.toString());
             if (matcherPdf.matches()) {
-                System.out.println("Send a pdf...");    
                 String message[] = {privateChatName, f.toString()};
                 socketConnection.sendPdf(new Message("PrivatePdf", message));
             } else if (matcherPng.matches()) {
-                System.out.println("Send a png...");    
                 String message[] = {privateChatName, f.toString()};
                 socketConnection.sendPdf(new Message("PrivatePng", message));
             } else if (matcherJpg.matches()) {
-                System.out.println("Send a pdf...");    
                 String message[] = {privateChatName, f.toString()};
                 socketConnection.sendPdf(new Message("PrivateJpg", message));
             } else if (matcherBmp.matches()) {
-                System.out.println("Send a pdf...");    
                 String message[] = {privateChatName, f.toString()};
                 socketConnection.sendPdf(new Message("PrivateBmp", message));
             } else {
