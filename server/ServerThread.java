@@ -23,6 +23,8 @@ public class ServerThread extends Thread implements Serializable {
     private transient ObjectOutputStream out;
     private ServerMessages msg;
 
+    // Constructor initializing the server thread with socket, 
+    // thread list, room lists, user name, password, chat area, input/output streams
     public ServerThread(
         Socket socket, 
         ArrayList<ServerThread> threads, 
@@ -47,6 +49,7 @@ public class ServerThread extends Thread implements Serializable {
         this.banStatus = false;
     }
 
+    // The main execution method for the server thread
     @Override
     public void run() {
         msg = new ServerMessages(threadList);
@@ -79,6 +82,7 @@ public class ServerThread extends Thread implements Serializable {
         }
     }
 
+    // Processes string input received from the client
     private boolean processString(String inputString) {
         if(inputString.equals("exit")) {
             return logout();
@@ -92,62 +96,77 @@ public class ServerThread extends Thread implements Serializable {
         return true;
     }
 
+    // Retrieves the socket associated with this server thread
     public Socket getSocket() {
         return this.client;
     }
 
+    // Retrieves the password associated with this server thread
     public String getPwd() {
         return this.pwd;
     }
 
+    // Retrieves the online status of this server thread
     public boolean getOnlineStatus() {
         return online;
     }
 
+    // Retrieves the input stream associated with this server thread
     public ObjectInputStream getObjectInputStream() {
         return this.input;
     }
 
+    // Retrieves the output stream associated with this server thread
     public ObjectOutputStream getObjectOutputStream() {
         return this.out;
     }
 
+    // Sets the online status of this server thread
     public void setOnlineStatus(boolean online) {
         this.online = online;
     }
 
+    // Sets the list of server threads associated with this server thread
     public void setThreadList(ArrayList<ServerThread> tl) {
         this.threadList = tl;
     }
 
+    // Sets the list of rooms associated with this server thread
     public void setRoomList(ArrayList<Room> roomList) {
         this.roomList = roomList;
     }
 
+    // Sets the current room of this server thread
     public void setRoom(String roomName) {
         this.room = roomName;
     }
 
+    // Sets the chat area associated with this server thread
     public void setChat(JTextArea chat) {
         this.chat = chat;
     }
 
+    // Retrieves the current room name of this server thread
     public String getRoomName() {
         return this.room;
     }
 
+    // Retrieves the ban status of this server thread
     public boolean getBanStatus() {
         return this.banStatus;
     }
 
+    // Sets the ban status of this server thread
     public void setBanStatus(boolean banStatus) {
         this.banStatus = banStatus;
     }
 
+    // Retrieves the user name associated with this server thread
     public String getUserName() {
         return this.userName;
     }
 
+    // Decodes the received message type and takes appropriate actions
     private void decodeMessage(Message in) {
         if (in.type.equals("Room") && !((String)in.msg).equals("")) {
             joinRoom((String)in.msg);
@@ -174,6 +193,7 @@ public class ServerThread extends Thread implements Serializable {
         }                
     }
 
+    // Joins the specified room
     private boolean joinRoom(String roomName) {
         this.room = roomName;
         if (msg.addUserToRoom(userName, room, roomList)) {
@@ -186,6 +206,7 @@ public class ServerThread extends Thread implements Serializable {
         return false;
     }
 
+    // Leaves the current room
     private boolean leaveRoom() {
         if (msg.removeUserFromRoom(userName, room, roomList)) {
             msg.sendToAllClients(new Message("Rooms", msg.generateRoomList(roomList)));
@@ -196,6 +217,7 @@ public class ServerThread extends Thread implements Serializable {
         return false;
     }
 
+    // Processes private message type and takes appropriate actions
     private void processPrivateMessage(Message in) {
 
         if (!(in.msg instanceof String[])) {
@@ -239,6 +261,7 @@ public class ServerThread extends Thread implements Serializable {
         }
     }
 
+    // Checks equality with another object based on user name
     @Override
     public boolean equals(Object o) {
         if (o instanceof ServerThread) {
@@ -249,6 +272,7 @@ public class ServerThread extends Thread implements Serializable {
         return false;
     }
 
+    // Logs out the user
     public boolean logout() {
         if (!room.equals("")) {
             msg.removeUserFromRoom(userName, room, roomList);

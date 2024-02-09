@@ -6,12 +6,14 @@ import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Arrays;
 
+// Main class representing the Server UI
 public class ServerUI extends JFrame {
     private JTextArea chatArea;
     private JTextArea userList;
     private JList<String> roomList;
     private JTextField inputField;
 
+    // Constructor for initializing the Server UI
     public ServerUI() {
         setTitle("Server Client");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -24,6 +26,7 @@ public class ServerUI extends JFrame {
         setVisible(true);
     }
 
+    // Method to initialize GUI components
     private void initComponents() {
         chatArea = new JTextArea();
         chatArea.setEditable(false);
@@ -39,6 +42,7 @@ public class ServerUI extends JFrame {
         inputField = new JTextField();
     }
 
+    // Method to layout GUI components
     private void layoutComponents() {
         setLayout(new BorderLayout());
 
@@ -63,6 +67,7 @@ public class ServerUI extends JFrame {
         add(serverModerationButton, BorderLayout.NORTH);
     }
 
+    // Method to open the moderation window
     private void openModerationWindow() {
         JFrame moderationFrame = new JFrame("Server Moderation");
         moderationFrame.setSize(700, 500);
@@ -254,6 +259,7 @@ public class ServerUI extends JFrame {
         banButton.addActionListener(showBanUserWindow);
     }
 
+    // Method to open a "warn user" moderation panel (warned user will receive a warning text)
     private void warnUser(RunServer server, ServerThread user, JTextArea userModeration) {
         JFrame warnFrame = new JFrame("Warn: " + user.userName);
         warnFrame.setSize(400, 100);
@@ -280,6 +286,8 @@ public class ServerUI extends JFrame {
         warnFrame.setVisible(true);
     }
 
+    // Method to open a "ban user" moderation panel
+    // If the user in question is already banned, he can be unbanned/pardon'ed 
     private void banUser(RunServer server, ServerThread user, JTextArea userModeration) {
         JFrame banFrame = new JFrame("ban: " + user.userName);
         banFrame.setSize(400, 100);
@@ -324,6 +332,7 @@ public class ServerUI extends JFrame {
         banFrame.setVisible(true);
     }
     
+    // Updates the room list
     private void updateRoomList(RunServer server) {
         Thread roomListThread = new Thread() {
             @Override
@@ -349,6 +358,7 @@ public class ServerUI extends JFrame {
     }
     
 
+    // Main method to start the Server UI
     public static void main(String[] args) {
         SwingUtilities.invokeLater(ServerUI::new);
     }

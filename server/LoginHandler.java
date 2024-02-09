@@ -68,13 +68,7 @@ public class LoginHandler extends Thread {
                 newUser = "* " + userName + " hat sich registriert! *";
                 chat.append(newUser + "\n");
 
-                // refresh user list for all clients, send welcome message
-                String userList = msg.generateUserListWithRoom(clients);
-                Message users = new Message("Users", userList);
-                System.out.println("send User List: \n");
-                System.out.println(users);
-                msg.sendToAllClients(users);
-                out.flush();
+                // send welcome message
                 msg.sendToAllClients(newUser);
             } else {
                 // If the username is already in use, prompt the client for authentication
@@ -102,14 +96,7 @@ public class LoginHandler extends Thread {
                     out.flush();
                     newUser = "* " + userName + " hat sich angemeldet! *";
 
-                    // refresh user list for all clients, send welcome message
-                    String userList = msg.generateUserListWithRoom(clients);
-                    Message users = new Message("Users", userList);
-                    System.out.println("send User List: \n");
-                    System.out.println(users);
-                    msg.sendToAllClients(users);
-                    out.writeObject(users);
-                    out.flush();
+                    // send welcome message
                     chat.append(newUser + "\n");
                     msg.sendToAllClients(newUser);
                 } else {

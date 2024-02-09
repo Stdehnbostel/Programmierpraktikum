@@ -8,11 +8,13 @@ public class ServerMessages extends Thread {
     public String msg;
     private ArrayList<ServerThread> clients;
 
+    // Constructor initializing the message string and the list of connected clients
     ServerMessages(ArrayList<ServerThread> clients) {
         this.msg = "";
         this.clients = clients;
     }
 
+    // Sends a message to a specific client
     public boolean sendToClient(ServerThread client, Object msg) {
         if(client.getOnlineStatus() == true) {
             try {
@@ -27,6 +29,7 @@ public class ServerMessages extends Thread {
         return false;
     }
 
+    // Sends a message to a client by their username
     public boolean sendToClient(String usernName, Object msg) {
         ServerThread client = null; 
         for (ServerThread cl: clients) {
@@ -40,6 +43,7 @@ public class ServerMessages extends Thread {
         return sendToClient(client, msg);
     }
 
+    // Sends a message to all connected clients
     public void sendToAllClients(Object msg) {
         if (clients == null) {
             return;
@@ -50,6 +54,7 @@ public class ServerMessages extends Thread {
         System.out.println("send to all Clients... done");
     }
 
+    // Sends a message to all clients in a specific room
     public boolean sendToRoom(String roomName, ArrayList<Room> rooms, Object msg) {
         Room room = null;
         for (Room r: rooms) {
@@ -67,6 +72,7 @@ public class ServerMessages extends Thread {
         return true;
     }
 
+    // Removes a user from a specific room
     public boolean removeUserFromRoom(String userName, String roomName, ArrayList<Room> rooms) {
         Room room = null;
         for (Iterator<Room> it = rooms.iterator(); it.hasNext();) {
@@ -83,6 +89,7 @@ public class ServerMessages extends Thread {
         return true;
     }
 
+    // Adds a user to a specific room by roomname
     public boolean addUserToRoom(String userName, String roomName, ArrayList<Room> rooms) {
         Room room = null;
         for (Room r: rooms) {
@@ -97,6 +104,7 @@ public class ServerMessages extends Thread {
         return addUserToRoom(userName, room);
     }
 
+    // Adds a user to a specific room by object room
     public boolean addUserToRoom(String userName, Room room) {
         ServerThread client = null;
         for (ServerThread sT: clients) {
@@ -114,6 +122,7 @@ public class ServerMessages extends Thread {
         return room.addUser(client);
     }
 
+    // Generates a list of online and offline users
     public String generateUserList(ArrayList<ServerThread> clients) {
         if (clients == null) {
             return "";
@@ -139,6 +148,7 @@ public class ServerMessages extends Thread {
         return users.toString();    
     }
 
+    // Generates a list of online users with their associated rooms
     public String generateUserListWithRoom(ArrayList<ServerThread> clients) {
         if (clients == null) {
             return "";
@@ -169,6 +179,7 @@ public class ServerMessages extends Thread {
         return users.toString();
     }
 
+    // Generates a list of room names
     public String[] generateRoomList(ArrayList<Room> rooms) {
        
         StringBuilder roomString = new StringBuilder();
@@ -184,11 +195,10 @@ public class ServerMessages extends Thread {
         return roomList;
     }
 
+    // Sets the list of connected clients
     public void setClientList(ArrayList<ServerThread> clinets) {
         this.clients = clinets;
     }
 
-    public void sendToClient(String userName, String message) {
-    }
 }
 

@@ -19,6 +19,7 @@ public class RunServer extends Thread {
     private ArrayList<Room> rooms;
     private ArrayList<Room> privateRooms;
 
+    // Constructor initializing the server with a chat area and lists for clients, rooms, and private rooms
     RunServer(JTextArea chat) {
         this.chat = chat;
         this.rooms = new ArrayList<Room>();
@@ -26,6 +27,7 @@ public class RunServer extends Thread {
         this.msg = new ServerMessages(this.clients);
     }
 
+    // Starts the server, loading user data if available, and waits for client connections
     public void startServer() {
 
         boolean runServer = true;
@@ -74,6 +76,7 @@ public class RunServer extends Thread {
         }
     }
 
+    // Shuts down the server, sends exit message to all clients, saves chat log, user data, and closes the server socket
     public void exitServer() {
         try {
             this.msg.sendToAllClients("exit");
@@ -90,6 +93,7 @@ public class RunServer extends Thread {
         }
     }
 
+    // Saves user data (ServerThreads) to a serialized file
     public void saveUserData() {
         try {
             FileOutputStream fout = new FileOutputStream("./UserData.ser");
@@ -102,11 +106,13 @@ public class RunServer extends Thread {
         }
     }
 
+    // Adds a room to the server's room list and notifies clients
     public void addRoom(Room room) {
         this.rooms.add(room);
         sendRoomList();
     }
 
+    // Renames a room in the server's room list and notifies clients
     public void renameRoom(String oldRoomName, String newRoomName) {
         for (Room room : rooms) {
             if (room.getName().equals(oldRoomName)) {
@@ -117,10 +123,12 @@ public class RunServer extends Thread {
         }
     }
 
+    // Generates a list of room names
     public String[] getRoomList() {
         return msg.generateRoomList(rooms);
     }
 
+    // Checks if a room with a given name exists
     public boolean isRoom(String name) {
         for (Room room: rooms) {
             if (room.getName().equals(name)) {
@@ -130,7 +138,8 @@ public class RunServer extends Thread {
         return false;
     }
 
-    // return type boolean allows for notification of succes
+    // Deletes a room from the server's room list, notifies clients, and updates user lists
+    // Return type boolean allows for notification of succes
     public boolean deleteRoom(String name) {
         for (Room room: rooms) {
             if(room.getName().equals(name)) {
@@ -149,6 +158,7 @@ public class RunServer extends Thread {
         return false;
     }
 
+    // Generates a list of online users with their associated rooms
     public String getUserList() {
         if (clients == null) {
             return "";
@@ -156,16 +166,19 @@ public class RunServer extends Thread {
         return msg.generateUserListWithRoom(clients);
     }
 
+    // Retrieves the list of connected clients
     public ArrayList<ServerThread> getClients() {
         return this.clients;
     }
 
+    // Sends a room list update to all connected clients
     private void sendRoomList() {
         if (server != null && !server.isClosed()) {
         msg.sendToAllClients(new Message("Rooms", msg.generateRoomList(rooms)));
         }
     }
 
+    // Retrieves a client by their username
     public ServerThread getClient(String name) {
         ServerThread client = null;
         for (ServerThread c: clients) {
@@ -176,10 +189,12 @@ public class RunServer extends Thread {
         return client;
     }
 
+    // Sends a message to a specific client
     public void sendToUser(ServerThread client, String message) {
         msg.sendToClient(client, message);
     }
 
+    // Sends a message to a client by their username
     public void sendToUser(String userName, String message) {
         msg.sendToClient(userName, message);
     }
