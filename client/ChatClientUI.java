@@ -60,7 +60,9 @@ public class ChatClientUI extends JFrame {
 
         initComponents();
         layoutComponents();
-        Thread waitForImges = new Thread() {
+        // Prüfe, ob Bilddateien eingegangen sind.
+        // Falls ja, rufe Methode auf, die Abfragt, ob das Bild angezeigt werden soll
+        Thread waitForImages = new Thread() {
             @Override
             public void run() {
                 while(true) {
@@ -76,8 +78,10 @@ public class ChatClientUI extends JFrame {
                 
             }
         };
-        waitForImges.start();
+        waitForImages.start();
 
+        // Prüfe, ob Pdfs eingegangen sind.
+        // Falls ja, rufe Methode auf, die Abfragt, ob das Pdf angezeigt werden soll
         Thread waitForPdfs = new Thread() {
             @Override
             public void run() {
@@ -95,6 +99,8 @@ public class ChatClientUI extends JFrame {
         };
         waitForPdfs.start();
         
+        // Prüfe, ob Sound-Dateien eingegangen sind.
+        // Falls ja, rufe Methode auf, die Abfragt, ob die Datei abgespielt werden soll
         Thread waitForSounds = new Thread() {
             @Override
             public void run() {
@@ -113,7 +119,7 @@ public class ChatClientUI extends JFrame {
         waitForSounds.start();
         setVisible(true);
     }
-
+    // initialisiere Komponenten der UI, auf die späer an anderer Stelle zugegriffen wird.
     private void initComponents() {
         chatArea = new JTextArea();
         chatArea.setEditable(false);
@@ -131,7 +137,6 @@ public class ChatClientUI extends JFrame {
         chatRoomList.addListSelectionListener(e -> {
             String selectedChatRoom = chatRoomList.getSelectedValue();
             System.out.println("selected: " + selectedChatRoom);
-            // Handle selected chat room
         });
         socketConnection.setUserList(userList);
         socketConnection.setRoomList(chatRoomList);
@@ -144,7 +149,7 @@ public class ChatClientUI extends JFrame {
             socketConnection.send(inputField.getText());
             inputField.setText("");
         });
-
+        // Das Symbol sollte eigentlich anders aussehen. Wir haben es dann aber dabei belassen.
         String icon = "";
         byte[] bIcon = {(byte) 0x1F, (byte) 0xC4};
         try {
@@ -152,7 +157,8 @@ public class ChatClientUI extends JFrame {
         } catch (Exception e) {
             System.out.println("Encoding Exception occurred " + e);
         }
-
+        // Wähle Dateien zum Versenden aus.
+        // Die Ausgewählten Dateien werden direkt versendet.
         fileChooser = new JFileChooser();
         fileButton = new JButton(icon);
         fileButton.addActionListener(e -> {
@@ -160,6 +166,7 @@ public class ChatClientUI extends JFrame {
             System.out.println(returnVal);
             File f = fileChooser.getSelectedFile();
             inputField.setText(f.toString());
+            // Wähle in Abhängigkeit von der Dateiendung die geeignete Methode zum Versenden aus.
             Pattern pdf = Pattern.compile(".*.pdf");
             Pattern wav = Pattern.compile(".*.wav");
             Matcher matcherPdf = pdf.matcher(f.toString());
@@ -174,7 +181,7 @@ public class ChatClientUI extends JFrame {
 
         chooseRoomButton = new JButton("Raum wählen");
     }
-
+    // Das Layout der Haupt-Benutzeroberfläche
     private void layoutComponents() {
         setLayout(new BorderLayout());
 
@@ -208,19 +215,23 @@ public class ChatClientUI extends JFrame {
         roomsAndUsers.add(roomListPanel, BorderLayout.SOUTH);
 
         JPanel roomOptionsPanel = new JPanel(new BorderLayout());
-        JButton privateChatButton = new JButton("privater Raum");
+        // Implementiere Funktionalität des Buttons, zum Wählen eines Raumes
         chooseRoomButton.addActionListener(e -> {
             if (chooseRoomButton.getText().equals("Raum verlassen")) {
+                // Sende Message mit type Room und leerer msg, um Raum zu verlassen
                 socketConnection.sendMessage(new Message("Room", ""));
                 currentRoom.clear();
+                // Die Beschriftung des Buttons wird anschließend wieder angepasst
                 SwingUtilities.invokeLater(new Runnable() {
                     @Override
                     public void run() {
                         chooseRoomButton.setText("Raum wählen");
                     }
                 });
-            } else if (chatRoomList.getSelectedValue() != null){
+            } else if (chatRoomList.getSelectedValue() != null){ // Prüfe, ob tatsächlich ein Raum ausgewählt ist
                 String selectedChatRoom = chatRoomList.getSelectedValue();
+                // In der Liste wird der Raum mit Info darüber angezeigt, wieviele Nutzer im Raum sind
+                // Hier wird dieser Zusatz entfernt.
                 ArrayList<String> breakDownRoomName = new ArrayList<String>(Arrays.asList(selectedChatRoom.split(" "))); 
                 breakDownRoomName.remove(breakDownRoomName.size() - 1);
                 breakDownRoomName.remove(breakDownRoomName.size() - 1);
@@ -234,7 +245,9 @@ public class ChatClientUI extends JFrame {
                 }
                 final String roomName = selectedChatRoom;
                 currentRoom.add(roomName);
+                // Sende Message mit type Room und Namen des Raumes, damit der Server den User zum gewählten Raum hinzufügt.
                 socketConnection.sendMessage(new Message("Room", roomName));
+                // Und passe die Beschriftung des Buttons an.
                 SwingUtilities.invokeLater(new Runnable() {
                     @Override
                     public void run() {
@@ -243,10 +256,12 @@ public class ChatClientUI extends JFrame {
                 });
             }
         });
+        JButton privateChatButton = new JButton("privater Raum");
         privateChatButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                if (userList.getText().length() > 8) {
+                if (userList.getText().length() > 8) { // Prüfe, ob überhaut eines Userliste erzeugt werden kann
+                    // Dann öffne das Fenster mit der Liste der verfügbaren Chatpartner
                     openPrivateChatDialog(getOnlineList());
                 }
             }
@@ -265,10 +280,10 @@ public class ChatClientUI extends JFrame {
         add(splitPane, BorderLayout.CENTER);
 
         JButton loginButton = new JButton("Anmelden/Registrieren");
-        loginButton.addActionListener(e -> openLoginWindow());
+        loginButton.addActionListener(e -> openLoginWindow()); // Öffnet den Dialog zur Anmeldung am Server.
         add(loginButton, BorderLayout.NORTH);
     }
-
+    // Layout des Login-Fensters
     private void openLoginWindow() {
         JFrame loginFrame = new JFrame("Login");
         loginFrame.setSize(300, 200);
@@ -307,7 +322,7 @@ public class ChatClientUI extends JFrame {
         loginFrame.add(loginPanel);
         loginFrame.setVisible(true);
     }
-
+    // Diaglog zur Abfrage, ob ein empfangenes Bild angezeigt werden soll
     private void askToShowPicture(BufferedImage img) {
         JFrame dialog = new JFrame();
         dialog.setSize(400, 100);
@@ -315,8 +330,8 @@ public class ChatClientUI extends JFrame {
         JPanel askBtnPanel = new JPanel(new FlowLayout());
         JLabel askForPermission = new JLabel("Ein Bild wurde empfangen. Soll es angezeigt werden?");
         JButton askBtn = new JButton("Bild anzeigen?");
+        // Falls Button geklickt wird, zeige das Bild in neuem Frame an.
         askBtn.addActionListener(new ActionListener() {
-
             @Override
             public void actionPerformed(ActionEvent e) {
             showPicture(img);
@@ -328,7 +343,7 @@ public class ChatClientUI extends JFrame {
         dialog.add(askBtnPanel);
         dialog.setVisible(true);
     }
-
+    // Funktion zur Anzeige der Bilder
     public void showPicture(BufferedImage img) {
         JFrame pic = new JFrame();
         pic.getContentPane().setLayout(new FlowLayout());
@@ -337,6 +352,7 @@ public class ChatClientUI extends JFrame {
         pic.setVisible(true);
     }
 
+    // Diaglog zur Abfrage, ob ein empfangenes Pdf angezeigt werden soll
     private void askToShowPdf(byte[] pdf) {
           
         JFrame dialog = new JFrame();
@@ -358,6 +374,7 @@ public class ChatClientUI extends JFrame {
         dialog.setVisible(true);
     }
 
+    // Funktion zur Anzeige der Pdfs 
     public void showPdf(byte[] pdf) {
         try {
             File f = new File("../temp.pdf");
@@ -373,7 +390,7 @@ public class ChatClientUI extends JFrame {
             System.out.println("IOExeption occured in Main" + e + e.getStackTrace());
         }
     }
-    
+    // Diaglog zur Abfrage, ob eine empfangene Sound-Datei abgespielt werden soll
     private void askToPlaySound(byte[] sound) {
           
         JFrame dialog = new JFrame();
@@ -394,8 +411,7 @@ public class ChatClientUI extends JFrame {
         dialog.add(askBtnPanel);
         dialog.setVisible(true);
     }
-
-
+    // Funktion zum Abspielen der Sonds
     private void playSound(byte[] sound) {
         try { 
             File f = new File("../temp.wav");
@@ -414,30 +430,36 @@ public class ChatClientUI extends JFrame {
             System.out.println("UnsupportedAudioException occurred while trying to play sound " + use + use.getStackTrace());
         }
     }
-
+    // Main-Loop, die auf neuen Chat-Input wartet
     private void getChatInput(ObjectInputStream in) {
+        // vor dem ersten Aufruf gibt es noch keine Privaten Nachrichten
         privateMessage[0] = "";
         while (!socketConnection.getSocket().isClosed()) {
             try {
                 Object msg = in.readObject();
+                // Ist msg vom Typ String, handelt es sich um eine einfache Chatnachricht. ODer um das Server-Signal zum beenden der Verbindung
                 if (msg instanceof String) {
-                    if (msg.equals("exit")) {
+                    if (msg.equals("exit")) { // Falls einfacher String mit "exit" empfangen wird, wird der Socket geschlossen.
                         socketConnection.exit((String)msg);
-                }
+                    }
                     SwingUtilities.invokeLater(new Runnable() {
                         @Override
                         public void run() {
                             chatArea.setText(chatArea.getText() + msg + "\n");
                         }
                     });
+            // ist die Empfangene msg vom Typ Message, wurde ist ein besonderes Ereignes zu Behandeln.
+            // Es könnte eine Datei empfangen worden sein, ein neuer User auf dem Server sein, ein Raum erstellt oder gelöscht worden sein.
                 } else if (msg instanceof Message) {
                     socketConnection.decodeMessage((Message)msg, currentRoom);
+                    // Anschließend wird die Anzeige der Userliste angepasst.
                     if (currentRoom.isEmpty()) {
                         adjustUserList("");
                         chooseRoomButton.setText("Raum wählen");
                     } else {
                         adjustUserList(currentRoom.get(0));
                     }
+                    // Falls eine private Nachricht empfangen wurde, verarbeite diese priavte Nachricht.
                     if (!privateMessage[0].equals("")) {
                         processPrivateChatInput();
                     }
@@ -449,11 +471,11 @@ public class ChatClientUI extends JFrame {
             }
         }
     }
-
+    // in Abhängigkeit, davon, ob der Nutzer sich in einem Raum befindet, wird die angezeigte Userliste dementsprechend angepasst.
     private void adjustUserList(String currentRoom) {
         if (currentRoom != null) {
             String text = userList.getText();
-
+            // Falls User in keinem Raum ist, gibt es nichts zu tun.
             if (currentRoom.isEmpty()) {
                 return;
             }
@@ -474,7 +496,7 @@ public class ChatClientUI extends JFrame {
         }
          
     }
-
+    // Liefert Liste der User, die derzeit online sind.
     private String[] getOnlineList() {
         String text = userList.getText();
         int offlineIndex = text.indexOf("Offline:");
@@ -489,7 +511,7 @@ public class ChatClientUI extends JFrame {
         }   
         return onlineList;
     }
-
+    // Layout des Dialogs zur Eröffnung eines privaten Chats.
     private void openPrivateChatDialog(String [] userList) {
         JFrame openPrivateChatFrame = new JFrame("privaten Raum eröffnen");
         JPanel dialogPanel = new JPanel(new BorderLayout());
@@ -505,11 +527,14 @@ public class ChatClientUI extends JFrame {
             public void actionPerformed(ActionEvent e) {
                 String userName = selectableUserList.getSelectedValue();
                 if (userName != null && !userName.equals("[" + socketConnection.getUserName() + "]")) {
-                    userName = userName.substring(1, userName.length() - 1);
-                    String chatName = createPrivateChatName(socketConnection.getUserName(), userName); 
-                    if (privateChats.containsKey(chatName)) {
+                    userName = userName.substring(1, userName.length() - 1); // Entferne Klammern um Usernamen
+                    // Aus den Namen der beteiligt User wird der Name des privaten Chats erzeugt.
+                    String chatName = createPrivateChatName(socketConnection.getUserName(), userName);  
+                    // Mit dem Namen wird zunächst überprüft, ob der entsprechende Chat schon existiert.
+                    if (privateChats.containsKey(chatName)) { 
                         PrivateChat privateChat = privateChats.get(chatName);
                         privateChat.show = true;
+                    // Falls zu dem Userpaar noch kein privater Chat existiert, wird er zur Liste der Privaten Chats hinzugefügt.
                     } else {
                         privateChats.put(chatName, new PrivateChat(new JTextArea(), true));
                     }
@@ -525,7 +550,7 @@ public class ChatClientUI extends JFrame {
         openPrivateChatFrame.setSize(500, 300);
         openPrivateChatFrame.setVisible(true);
     }
-
+    // Layout des Fensters zur Anzeige des priavten Chats
     private void openPrivateChat(String userName, String privateChatName) {
         PrivateChat privateChat = privateChats.get(privateChatName);
         privateChat.open = true;
@@ -554,10 +579,12 @@ public class ChatClientUI extends JFrame {
             @Override
             public void actionPerformed(ActionEvent e) {
                 String msg[] = {privateChatName, "[" + socketConnection.getUserName() + "]: " + chatInput.getText()};
-                socketConnection.sendMessage(new Message("Private", msg));
+                socketConnection.sendMessage(new Message("Private", msg)); // Message mit type Private und "" als msg ist Signal zum Eröffnen des privaten Chats
                 chatInput.setText("");
             }
         });
+        // Werden Bilder über den priavten Chat versendet, werden diese als privat markiert. 
+        // Die urprünglichen MEthoden zum Versenden von Dateien waren auf diese Funktionalität nicht ausgelegt.
         sendFileButton.addActionListener(e -> {
             int returnVal = fileChooser.showOpenDialog(inputField);
             System.out.println(returnVal);
@@ -591,11 +618,12 @@ public class ChatClientUI extends JFrame {
             @Override
             public void actionPerformed(ActionEvent e) {
                 String msg[] = {privateChatName, "~//leaveRoom"};
-                socketConnection.sendMessage(new Message("Private", msg));
+                socketConnection.sendMessage(new Message("Private", msg)); // Message mit type Private und "~//leaveRoom" als msg ist Signal zum Verlassen des priavten Chats
                 privateChat.show = false;
                 privateChatFrame.dispose();
             }
         });
+        // Damit das Fenster zur Anzeige des privaten Chats geschlossen werden kann ohne den Chat zu verlassen, wird in einem Feld gespeichert, ob das Fenster derzeit offen ist.
         privateChatFrame.addWindowListener(new WindowAdapter() {
             @Override
             public void windowClosed(WindowEvent e) {
@@ -610,7 +638,7 @@ public class ChatClientUI extends JFrame {
             }
         });
     }
-    
+    // Layout des Diaglogs, der Zustimmung zur Eröffnung eines privaten Chat erfragt
     private boolean openConsentWindow(String userName, String privateChatName) {
         PrivateChat privateChat = privateChats.get(privateChatName);
     
@@ -633,7 +661,7 @@ public class ChatClientUI extends JFrame {
     
             consentPanel.add(consentLabel, BorderLayout.CENTER);
             consentPanel.add(buttonPanel, BorderLayout.SOUTH);
-    
+            // Wählt der User "Ja", wird der priavte Chat anzeigt.
             consentButton.addActionListener(new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
@@ -642,7 +670,7 @@ public class ChatClientUI extends JFrame {
                     consentFrame.dispose();
                 }
             });
-    
+            // Wählt der User nein, wird der Chat nicht angezeigt und der andere Nutzer über die Ablehnung informiert.
             denyConsentButton.addActionListener(new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
@@ -661,9 +689,10 @@ public class ChatClientUI extends JFrame {
     }
     
     
-
+    // Erzeuge den Namen eines privaten Chats aus den Namen der User
+    // die beiden Strings werden mit compareTo() verglichen und abhängig von Ergebnis wird der Chatname erzeugt
     private String createPrivateChatName(String thisUser, String otherUser) {
-       return thisUser.compareTo(otherUser) > 1 ? 
+       return thisUser.compareTo(otherUser) > 0 ? 
             thisUser + "\n" + otherUser : otherUser + "\n" + thisUser; 
     }
 
@@ -689,7 +718,7 @@ public class ChatClientUI extends JFrame {
         }
         privateMessage[0] = "";
     }
-
+    // Extrahiere den Namen des anderen Chatpartners aus dem Namen des Chats
     private String getChatPartnerName() {
             String chatPartners[] = privateMessage[0].split("\n");
             return chatPartners[0].equals(socketConnection.getUserName()) ? 
