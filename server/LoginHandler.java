@@ -67,6 +67,8 @@ public class LoginHandler extends Thread {
                 comThread.start();
                 newUser = "* " + userName + " hat sich registriert! *";
                 chat.append(newUser + "\n");
+
+                // refresh user list for all clients, send welcome message
                 String userList = msg.generateUserListWithRoom(clients);
                 Message users = new Message("Users", userList);
                 System.out.println("send User List: \n");
@@ -85,6 +87,7 @@ public class LoginHandler extends Thread {
                 }
                 if (comThread.getPwd().equals(pwd)) {
                     System.out.println("Passwort korrekt");
+                    // test for ban status
                     if (comThread.getBanStatus() == true) {
                         out.writeObject("User ist verbannt! Verbindung wird beendet.");
                         out.flush();
@@ -98,6 +101,8 @@ public class LoginHandler extends Thread {
                     out.writeObject("Login erfolgreich!");
                     out.flush();
                     newUser = "* " + userName + " hat sich angemeldet! *";
+
+                    // refresh user list for all clients, send welcome message
                     String userList = msg.generateUserListWithRoom(clients);
                     Message users = new Message("Users", userList);
                     System.out.println("send User List: \n");
@@ -108,14 +113,15 @@ public class LoginHandler extends Thread {
                     chat.append(newUser + "\n");
                     msg.sendToAllClients(newUser);
                 } else {
-                    // Password is incorrect
+                    // Password is incorrect, close connection
                     out.writeObject("Falsches Passwort! Verbindung wird beendet.");
                     out.flush();
                     client.close();
                 }
                 
             }
-    
+            
+            // after login / register attempt, refresh client and room lists for all users
             String userList = msg.generateUserListWithRoom(clients);
             Message users = new Message("Users", userList);
             System.out.println("send User List: \n");
