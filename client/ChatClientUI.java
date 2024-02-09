@@ -600,16 +600,16 @@ public class ChatClientUI extends JFrame {
             Matcher matcherBmp = bmp.matcher(f.toString());
             if (matcherPdf.matches()) {
                 String message[] = {privateChatName, f.toString()};
-                socketConnection.sendPdf(new Message("PrivatePdf", message));
+                socketConnection.sendPrivatePdf(new Message("PrivatePdf", message));
             } else if (matcherPng.matches()) {
                 String message[] = {privateChatName, f.toString()};
-                socketConnection.sendPdf(new Message("PrivatePng", message));
+                socketConnection.sendPrivatePic(new Message("PrivatePng", message));
             } else if (matcherJpg.matches()) {
                 String message[] = {privateChatName, f.toString()};
-                socketConnection.sendPdf(new Message("PrivateJpg", message));
+                socketConnection.sendPrivatePic(new Message("PrivateJpg", message));
             } else if (matcherBmp.matches()) {
                 String message[] = {privateChatName, f.toString()};
-                socketConnection.sendPdf(new Message("PrivateBmp", message));
+                socketConnection.sendPrivatePic(new Message("PrivateBmp", message));
             } else {
                 socketConnection.sendPic(f.toString());
             }

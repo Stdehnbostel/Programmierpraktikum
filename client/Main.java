@@ -10,7 +10,6 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Base64;
-import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -46,7 +45,8 @@ public class Main extends Thread {
         this.sounds= sounds;
         this.privateMessages = pM;
     }
-
+    // Die login Methode wird bei der Anmeldung am Server aufgerufen
+    // Sie überprüft auch, ob vom Server die korrekten Signale kommen.
     public ObjectInputStream login() {
         
         try {
@@ -94,7 +94,7 @@ public class Main extends Thread {
 
         return null;
     }
-
+    // Methode zum Versenden einfacher Textnachrichten
     public void send(String msg) {
         try {
             out.writeObject(msg);
@@ -103,7 +103,7 @@ public class Main extends Thread {
             System.out.println("IOException occurd in Main" + e);
         }
     }
-
+    // Methode zum Versenden von Dateien und Anweisungen an der Server (Raum betreten, Privaten Chat eröffnen)
     public void sendMessage(Message msg) {
         try {
             out.writeObject(msg);
@@ -112,7 +112,7 @@ public class Main extends Thread {
             System.out.println("IOException occurd in Main" + e);
         }
     }
-
+    // Methode zum Versenden von Bildern, die nicht als Private Nachricht verschickt werden
     public void sendPic(String msg) {
         File f = new File(msg);
         BufferedImage bimg;
@@ -134,7 +134,7 @@ public class Main extends Thread {
         }
     }
     
-    public void sendPic(Message msg) {
+    public void sendPrivatePic(Message msg) {
         if (!(msg.msg instanceof String[])) {
             return;
         }
@@ -159,7 +159,7 @@ public class Main extends Thread {
             }
         }
     }
-
+    // Methode zum Versenden von Pdf- oder Wav-Dateien, die nicht über einen privaten Chat gehen
     public void sendFile(String msg) {
         File f = new File(msg);
         
@@ -176,7 +176,7 @@ public class Main extends Thread {
         }
     }
     
-    public void sendPdf(Message msg) {
+    public void sendPrivatePdf(Message msg) {
         System.out.println("Privates Pdf");
         if (!(msg.msg instanceof String[])) {
             return;
@@ -223,7 +223,7 @@ public class Main extends Thread {
     public String getUserName() {
         return this.userName;
     }
-
+    // Bestimme das Dateiformat an hand der Endung des Dateinamens
     private String getFormat(String filePath) {
         Pattern formatPng = Pattern.compile(".*.png");
         Pattern formatJpeg = Pattern.compile(".*.jpg");
@@ -258,9 +258,9 @@ public class Main extends Thread {
         }
         return "";
     }
-
+    // Verarbeite Nachrichten, die als Message empfangen wurden
     public void decodeMessage(Message msg, ArrayList<String> currentRoom) {
-
+        // ist der type Rooms, aktualisiere die Raumliste
         if (msg.type.equals("Rooms")) {
             String[] response = msg.toStringArray();
             SwingUtilities.invokeLater(new Runnable() {
@@ -269,33 +269,35 @@ public class Main extends Thread {
                 }
             });
         }
-
-        if (msg.type.equals("Room")) {
+        // ist der type "Room", hat sich an den Räumen etwas geändert..
+        else if (msg.type.equals("Room")) {
+            // Wennn das "msg" Feld ein leerer String ist, wurde ein Raum gelöscht/ der User aus einem Raum entfernt
             if (((String)msg.msg).equals("")) {
-
-                currentRoom.clear();
+                currentRoom.clear(); 
             } else {
+                // update das Feld current Room
                 currentRoom.add((String)msg.msg);
             }
+            // Sende die Nachricht an den Server zurück um den Status in dem dort zu dem User gehörenden ServerThread entprechend anzupassen
             sendMessage(msg);
         }
-            
-        if (((Message)msg).type.equals("Users")) {
+        // ist der type "Users" aktualisiere die USerliste
+        else if (((Message)msg).type.equals("Users")) {
             String response = msg.toString();
             userList.setText(response);
         }
-
-        if (msg.type.equals("Private") && msg.msg instanceof String[]) {
+        // ist der type "Private" füge Nachricht in die Liste priavter Nachrichten hinzu.
+        else if (msg.type.equals("Private") && msg.msg instanceof String[]) {
             String[] pM = (String[])msg.msg;
             privateMessages[0] = pM[0];
             privateMessages[1] = pM[1];
         }
-            
+        // Prüfe ob der type der Nachricht einem unterstützten Dateiformat entspricht. 
         String fileEnding = getFormat(((Message)msg).type);
         boolean isImage = !fileEnding.equals("") && !fileEnding.equals("pdf") && !fileEnding.equals("wav");
         boolean isPdf = fileEnding.equals("pdf");
         boolean isWav = fileEnding.equals("wav");
-
+        // und rufe gegebenenfalls die entsprechende Methode auf
         if (isImage) {
             showImage(msg, fileEnding);
         } else if (isPdf) {
@@ -304,7 +306,8 @@ public class Main extends Thread {
             playSound(msg);
         }
     }
-
+    // Falls ein String mit "exit" empfangen wurde, Schließe den Socket und sende die Nachricht an den Server
+    // um  den user im dortigen ServerThread auszuloggen
     public void exit(String msg) {
         send(msg);
         try {
@@ -313,7 +316,7 @@ public class Main extends Thread {
             System.out.println("IOException occurred while trying to close socket" + e + e.getStackTrace());
         }
     }
-
+    // Methode decodiert das Erhaltene Bild und fügt es zur Liste der Bilder hinzu
     private void showImage(Message img, String fileEnding) {
         String encodedImg = (String)img.msg;
         String fileName = "temp." + fileEnding;
@@ -330,12 +333,14 @@ public class Main extends Thread {
         }
     }
 
+    // Methode decodiert das Erhaltene Pdf und fügt es zur Liste der Pdfs hinzu
     private void showPdf(Message msg) {
         String encodedPdf = (String)msg.msg;
         byte[] pdf = Base64.getDecoder().decode(encodedPdf);
         this.pdfs.add(pdf);
     }
 
+    // Methode decodiert die erhaltene .wav-Datei und fügt es zur Liste der Sounds hinzu
     private void playSound(Message msg) {
         String encodedSound = (String)msg.msg;
         System.out.println("received a sound file");
